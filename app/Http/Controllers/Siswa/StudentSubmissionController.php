@@ -119,7 +119,15 @@ class StudentSubmissionController extends Controller
     {
         $data = $request->validate([
             'answer_text' => ['nullable', 'string'],
-            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx', 'max:10240'],
+            'file' => ['nullable', 'file', 'max:10240', function ($attribute, $value, $fail) {
+                if ($value) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+                    if (!in_array($ext, $allowed)) {
+                        $fail('Format file harus berupa: pdf, doc, docx, xls, xlsx, ppt, atau pptx.');
+                    }
+                }
+            }],
         ]);
 
         $filePath = null;

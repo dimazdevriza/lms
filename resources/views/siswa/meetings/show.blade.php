@@ -23,11 +23,26 @@
                     <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> {{ \Carbon\Carbon::parse($meeting->date)->format('d M Y') }}</span>
                     @if($block = $meeting->schedule_block)
                         <span><i class="fas fa-clock me-1"></i> {{ $block->jp_count }} JP ({{ \Carbon\Carbon::parse($block->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($block->end_time)->format('H:i') }})</span>
-                    @endif
                 </div>
             </div>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @foreach($errors->all() as $error)
+                {{ $error }}<br>
+            @endforeach
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     @if($meeting->video_link)
         {{-- ponytail: simple video link alert callout --}}
@@ -138,7 +153,7 @@
                             @endif
 
                             @php
-                                $submission = $a->submissions()->where('student_id', $student->id)->first();
+                                $submission = \App\Models\AssignmentSubmission::where('assignment_id', $a->id)->where('student_id', $student->id)->first();
                             @endphp
 
                             @if($submission)
