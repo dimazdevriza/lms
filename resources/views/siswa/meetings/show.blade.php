@@ -159,7 +159,7 @@
                                     <i class="fas fa-laptop me-1"></i> Kerjakan Online
                                 </a>
                             @else
-                                <form method="POST" action="{{ route('siswa.assignments.submit', $a) }}" enctype="multipart/form-data">
+                                <form method="POST" action="{{ route('siswa.assignments.submit', $a) }}" enctype="multipart/form-data" onsubmit="var btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.innerHTML = '<i class=\'fas fa-spinner fa-spin me-1\'></i> Mengirim...'; }">
                                     @csrf
                                     <div class="mb-3">
                                         <textarea class="form-control form-control-sm" name="answer_text" placeholder="Catatan/Jawaban singkat (opsional)..." rows="2" style="border-radius: var(--radius-sm);"></textarea>

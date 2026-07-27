@@ -132,7 +132,7 @@ class StudentSubmissionController extends Controller
             ->first();
 
         if ($submission) {
-            if ($filePath && $submission->file_path) {
+            if ($filePath && $submission->file_path && $submission->file_path !== $filePath) {
                 Storage::disk('local')->delete($submission->file_path);
             }
             $submission->update([
@@ -142,14 +142,31 @@ class StudentSubmissionController extends Controller
             ]);
             $msg = 'Tugas berhasil diperbarui.';
         } else {
-            AssignmentSubmission::create([
-                'assignment_id' => $assignment->id,
-                'student_id' => $student->id,
-                'answer_text' => $data['answer_text'] ?? null,
-                'file_path' => $filePath,
-                'submitted_at' => now(),
-            ]);
-            $msg = 'Tugas berhasil dikirim.';
+            try {
+                AssignmentSubmission::create([
+                    'assignment_id' => $assignment->id,
+                    'student_id' => $student->id,
+                    'answer_text' => $data['answer_text'] ?? null,
+                    'file_path' => $filePath,
+                    'submitted_at' => now(),
+                ]);
+                $msg = 'Tugas berhasil dikirim.';
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+                    ->where('student_id', $student->id)
+                    ->first();
+                if ($submission) {
+                    if ($filePath && $submission->file_path && $submission->file_path !== $filePath) {
+                        Storage::disk('local')->delete($submission->file_path);
+                    }
+                    $submission->update([
+                        'answer_text' => array_key_exists('answer_text', $data) ? $data['answer_text'] : $submission->answer_text,
+                        'file_path' => $filePath ?? $submission->file_path,
+                        'submitted_at' => now(),
+                    ]);
+                    $msg = 'Tugas berhasil diperbarui.';
+                }
+            }
         }
 
         // Notify Teacher of submission
@@ -214,18 +231,33 @@ class StudentSubmissionController extends Controller
 
         DB::beginTransaction();
         try {
+            if (!$existingSubmission) {
+                $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
+                    ->where('student_id', $student->id)
+                    ->first();
+            }
+
             if ($existingSubmission) {
                 QuestionAnswer::where('assignment_submission_id', $existingSubmission->id)->delete();
                 $submission = $existingSubmission;
                 $submission->update(['submitted_at' => now()]);
                 $msg = 'Jawaban berhasil diperbarui!';
             } else {
-                $submission = AssignmentSubmission::create([
-                    'assignment_id' => $assignment->id,
-                    'student_id' => $student->id,
-                    'submitted_at' => now(),
-                ]);
-                $msg = 'Jawaban berhasil dikirim!';
+                try {
+                    $submission = AssignmentSubmission::create([
+                        'assignment_id' => $assignment->id,
+                        'student_id' => $student->id,
+                        'submitted_at' => now(),
+                    ]);
+                    $msg = 'Jawaban berhasil dikirim!';
+                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                    $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+                        ->where('student_id', $student->id)
+                        ->first();
+                    QuestionAnswer::where('assignment_submission_id', $submission->id)->delete();
+                    $submission->update(['submitted_at' => now()]);
+                    $msg = 'Jawaban berhasil diperbarui!';
+                }
             }
 
             $totalScore = 0;
