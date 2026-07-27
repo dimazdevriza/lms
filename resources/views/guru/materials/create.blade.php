@@ -187,7 +187,6 @@ function validateFileSize(input, maxMb = 10) {
 }
 </script>
 @endpush
-@endsection
 
         <!-- Info Sidebar -->
         <div class="col-lg-4 mb-4 reveal reveal-delay-2">
