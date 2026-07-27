@@ -179,6 +179,26 @@
                     
                     <li class="sidebar-header">Akademik</li>
                     <li><a href="{{ route('siswa.subjects.index') }}" class="{{ request()->routeIs('siswa.subjects.*') || request()->routeIs('siswa.meetings.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i> Mata Pelajaran</a></li>
+                    <li>
+                        <a href="{{ route('siswa.assignments.index') }}" class="{{ request()->routeIs('siswa.assignments.*') ? 'active' : '' }}">
+                            <i class="fas fa-tasks"></i> Daftar Tugas
+                            @php
+                                $studentForBadge = \App\Models\Student::where('user_id', auth()->id())->first();
+                                $activePendingTasksCount = 0;
+                                if ($studentForBadge) {
+                                    $submittedIds = \App\Models\AssignmentSubmission::where('student_id', $studentForBadge->id)->pluck('assignment_id');
+                                    $activePendingTasksCount = \App\Models\Assignment::where('class_id', $studentForBadge->class_id)
+                                        ->whereNotIn('id', $submittedIds)
+                                        ->where(function($q) {
+                                            $q->whereNull('due_at')->orWhere('due_at', '>=', now());
+                                        })->count();
+                                }
+                            @endphp
+                            @if($activePendingTasksCount > 0)
+                                <span class="badge rounded-pill ms-auto" style="background-color: #f9a825; color: #fff; font-size: 0.65rem;">{{ $activePendingTasksCount }}</span>
+                            @endif
+                        </a>
+                    </li>
                     <li><a href="{{ route('siswa.attendance.index') }}" class="{{ request()->routeIs('siswa.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Riwayat Kehadiran</a></li>
                     <li><a href="{{ route('siswa.directory') }}" class="{{ request()->routeIs('siswa.directory') ? 'active' : '' }}"><i class="fas fa-users"></i> Teman Kelas & Guru</a></li>
                 @endif
