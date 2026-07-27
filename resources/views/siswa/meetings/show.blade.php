@@ -23,6 +23,7 @@
                     <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> {{ \Carbon\Carbon::parse($meeting->date)->format('d M Y') }}</span>
                     @if($block = $meeting->schedule_block)
                         <span><i class="fas fa-clock me-1"></i> {{ $block->jp_count }} JP ({{ \Carbon\Carbon::parse($block->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($block->end_time)->format('H:i') }})</span>
+                    @endif
                 </div>
             </div>
         </div>
