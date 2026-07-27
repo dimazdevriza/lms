@@ -35,7 +35,17 @@
                     @elseif($assignment->type === 'external')
                         <span class="status-badge status-badge--hadir" style="background: rgba(25,135,84,0.1); color: var(--primary); border: none; font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-weight: 700;"><i class="fas fa-link me-1"></i> Kuis Online (Quizizz, dll)</span>
                     @else
-                        <span class="status-badge status-badge--alpa"><i class="fas fa-file-pdf me-1"></i> Tugas PDF</span>
+                        @php
+                            $fileExtension = $assignment->file_path ? pathinfo($assignment->file_path, PATHINFO_EXTENSION) : 'docx';
+                            $fileIconClass = match(strtolower($fileExtension)) {
+                                'pdf' => 'fa-file-pdf',
+                                'doc', 'docx' => 'fa-file-word',
+                                'xls', 'xlsx' => 'fa-file-excel',
+                                'ppt', 'pptx' => 'fa-file-powerpoint',
+                                default => 'fa-file-alt'
+                            };
+                        @endphp
+                        <span class="status-badge status-badge--alpa" style="background: rgba(13,110,253,0.1); color: #0d6efd;"><i class="fas {{ $fileIconClass }} me-1"></i> Tugas Dokumen</span>
                     @endif
                     @if($assignment->due_at)
                         <span class="small {{ $isDeadlinePassed ? 'text-danger fw-bold' : 'text-muted' }}">
