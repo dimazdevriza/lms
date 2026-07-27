@@ -77,7 +77,7 @@ class StudentSubmissionController extends Controller
     }
 
     /**
-     * Submit answers for a PDF or online assignment
+     * Submit or update answers for a PDF or online assignment
      */
     public function store(Request $request, Assignment $assignment): RedirectResponse
     {
@@ -93,7 +93,16 @@ class StudentSubmissionController extends Controller
 
         // Enforce deadline — tolak submission jika deadline sudah lewat
         if ($assignment->due_at && Carbon::parse($assignment->due_at)->isPast()) {
-            return back()->withErrors(['general' => 'Batas waktu pengumpulan tugas ini sudah lewat. Anda tidak dapat mengumpulkan tugas lagi.']);
+            return back()->withErrors(['general' => 'Batas waktu pengumpulan tugas ini sudah lewat. Anda tidak dapat mengumpulkan atau mengubah tugas lagi.']);
+        }
+
+        // Check if existing submission has already been graded
+        $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
+            ->where('student_id', $student->id)
+            ->first();
+
+        if ($existingSubmission && $existingSubmission->score !== null) {
+            return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat diubah lagi.']);
         }
 
         if ($assignment->isOnline()) {
@@ -104,7 +113,7 @@ class StudentSubmissionController extends Controller
     }
 
     /**
-     * Handle PDF assignment submission (existing behavior)
+     * Handle PDF assignment submission or edit
      */
     private function storePdf(Request $request, Assignment $assignment, Student $student): RedirectResponse
     {
@@ -127,10 +136,11 @@ class StudentSubmissionController extends Controller
                 Storage::disk('local')->delete($submission->file_path);
             }
             $submission->update([
-                'answer_text' => $data['answer_text'] ?? $submission->answer_text,
+                'answer_text' => array_key_exists('answer_text', $data) ? $data['answer_text'] : $submission->answer_text,
                 'file_path' => $filePath ?? $submission->file_path,
                 'submitted_at' => now(),
             ]);
+            $msg = 'Tugas berhasil diperbarui.';
         } else {
             AssignmentSubmission::create([
                 'assignment_id' => $assignment->id,
@@ -139,6 +149,7 @@ class StudentSubmissionController extends Controller
                 'file_path' => $filePath,
                 'submitted_at' => now(),
             ]);
+            $msg = 'Tugas berhasil dikirim.';
         }
 
         // Notify Teacher of submission
@@ -147,8 +158,8 @@ class StudentSubmissionController extends Controller
             if ($teacherUser) {
                 \App\Models\Notification::create([
                     'user_id' => $teacherUser->id,
-                    'title' => '📥 Tugas Dikumpulkan: ' . Auth::user()->name,
-                    'message' => Auth::user()->name . ' telah mengumpulkan tugas ' . $assignment->title . '.',
+                    'title' => '📥 Tugas Dikumpulkan/Diperbarui: ' . Auth::user()->name,
+                    'message' => Auth::user()->name . ' telah mengumpulkan/memperbarui tugas ' . $assignment->title . '.',
                     'url' => route('guru.assignments.show', $assignment->id),
                 ]);
             }
@@ -156,25 +167,21 @@ class StudentSubmissionController extends Controller
             // Ignore
         }
 
-        return back()->with('success', 'Tugas berhasil dikirim.');
+        return back()->with('success', $msg);
     }
 
     /**
-     * Handle online assignment submission with validation that ALL questions must be answered
+     * Handle online assignment submission or edit
      */
     private function storeOnline(Request $request, Assignment $assignment, Student $student): RedirectResponse
     {
         $assignment->load('questions.options');
         $questions = $assignment->questions;
 
-        // Check if already submitted
+        // Check if existing submission
         $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
             ->where('student_id', $student->id)
             ->first();
-
-        if ($existingSubmission) {
-            return back()->withErrors(['general' => 'Anda sudah mengumpulkan tugas ini.']);
-        }
 
         // Validate that ALL questions are answered
         $answersData = $request->input('answers', []);
@@ -207,12 +214,19 @@ class StudentSubmissionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Create the submission
-            $submission = AssignmentSubmission::create([
-                'assignment_id' => $assignment->id,
-                'student_id' => $student->id,
-                'submitted_at' => now(),
-            ]);
+            if ($existingSubmission) {
+                QuestionAnswer::where('assignment_submission_id', $existingSubmission->id)->delete();
+                $submission = $existingSubmission;
+                $submission->update(['submitted_at' => now()]);
+                $msg = 'Jawaban berhasil diperbarui!';
+            } else {
+                $submission = AssignmentSubmission::create([
+                    'assignment_id' => $assignment->id,
+                    'student_id' => $student->id,
+                    'submitted_at' => now(),
+                ]);
+                $msg = 'Jawaban berhasil dikirim!';
+            }
 
             $totalScore = 0;
             $totalPoints = 0;
@@ -228,7 +242,6 @@ class StudentSubmissionController extends Controller
 
                 if ($question->type === 'pilihan_ganda') {
                     $selectedOptionId = $answer['selected_option_id'] ?? null;
-                    // Auto-grade: check if selected option is correct
                     if ($selectedOptionId) {
                         $correctOption = $question->options->where('is_correct', true)->first();
                         $isCorrect = $correctOption && $correctOption->id == $selectedOptionId;
@@ -237,7 +250,6 @@ class StudentSubmissionController extends Controller
                     }
                 } elseif ($question->type === 'isian_singkat') {
                     $answerText = trim($answer['answer_text'] ?? '');
-                    // Auto-grade: case-insensitive exact match
                     if ($question->correct_answer) {
                         $isCorrect = mb_strtolower(trim($answerText)) === mb_strtolower(trim($question->correct_answer));
                         $score = $isCorrect ? $question->points : 0;
@@ -245,7 +257,6 @@ class StudentSubmissionController extends Controller
                     }
                 } elseif ($question->type === 'essay') {
                     $answerText = trim($answer['answer_text'] ?? '');
-                    // Essay: not auto-graded, teacher will grade manually
                     $isCorrect = null;
                     $score = null;
                 }
@@ -266,8 +277,9 @@ class StudentSubmissionController extends Controller
             if (!$hasEssay && $totalPoints > 0) {
                 $percentage = round(($totalScore / $totalPoints) * 100);
                 $submission->update(['score' => $percentage]);
+            } else {
+                $submission->update(['score' => null]);
             }
-            // If there are essay questions, score stays null until teacher grades them
 
             DB::commit();
         } catch (\Exception $e) {
@@ -281,8 +293,8 @@ class StudentSubmissionController extends Controller
             if ($teacherUser) {
                 \App\Models\Notification::create([
                     'user_id' => $teacherUser->id,
-                    'title' => '📥 Tugas Dikumpulkan: ' . Auth::user()->name,
-                    'message' => Auth::user()->name . ' telah mengumpulkan tugas ' . $assignment->title . '.',
+                    'title' => '📥 Tugas Dikumpulkan/Diperbarui: ' . Auth::user()->name,
+                    'message' => Auth::user()->name . ' telah mengumpulkan/memperbarui tugas ' . $assignment->title . '.',
                     'url' => route('guru.assignments.show', $assignment->id),
                 ]);
             }
@@ -291,7 +303,7 @@ class StudentSubmissionController extends Controller
         }
 
         return redirect()->route('siswa.assignments.show', $assignment)
-            ->with('success', 'Jawaban berhasil dikirim!');
+            ->with('success', $msg);
     }
 
     public function unsubmit(Assignment $assignment): RedirectResponse
@@ -310,17 +322,21 @@ class StudentSubmissionController extends Controller
             ->where('student_id', $student->id)
             ->firstOrFail();
 
-        if ($submission->score !== null) {
-            return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat dibatalkan.']);
+        // Enforce deadline — tolak pembatalan jika deadline sudah lewat
+        if ($assignment->due_at && Carbon::parse($assignment->due_at)->isPast()) {
+            return back()->withErrors(['general' => 'Batas waktu pengumpulan tugas ini sudah lewat. Pengiriman tugas tidak dapat dibatalkan.']);
         }
 
-        if ($assignment->type !== 'pdf') {
-            abort(403, 'Hanya tugas tipe PDF yang dapat dibatalkan pengirimannya.');
+        if ($submission->score !== null) {
+            return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat dibatalkan.']);
         }
 
         if ($submission->file_path) {
             Storage::disk('local')->delete($submission->file_path);
         }
+
+        // Delete question answers if online assignment
+        QuestionAnswer::where('assignment_submission_id', $submission->id)->delete();
 
         $submission->delete();
 

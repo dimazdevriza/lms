@@ -71,18 +71,125 @@
                 @else
                     <div class="d-flex flex-column align-items-center gap-2 mt-2">
                         <span class="status-badge status-badge--pending fs-6"><i class="fas fa-hourglass-half me-1"></i> Menunggu penilaian guru</span>
-                        @if($assignment->type === 'pdf' || $assignment->type === 'external')
-                            <form action="{{ route('siswa.assignments.unsubmit', $assignment) }}" method="POST" class="mt-2" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengiriman tugas ini? File yang dikirim sebelumnya akan dihapus.')">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                                    <i class="fas fa-undo me-1"></i> Batalkan Pengiriman
+                        @if(!$isDeadlinePassed)
+                            <div class="d-flex gap-2 align-items-center mt-2 flex-wrap justify-content-center">
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse" aria-expanded="{{ ($errors->any() || request()->has('edit')) ? 'true' : 'false' }}" aria-controls="editSubmissionCollapse">
+                                    <i class="fas fa-edit me-1"></i> Edit Jawaban
                                 </button>
-                            </form>
+                                <form action="{{ route('siswa.assignments.unsubmit', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengiriman tugas ini?')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="fas fa-undo me-1"></i> Batalkan Pengiriman
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <small class="text-danger mt-1"><i class="fas fa-lock me-1"></i> Batas waktu pengumpulan telah berakhir. Tugas tidak dapat diubah lagi.</small>
                         @endif
                     </div>
                 @endif
             </div>
         </div>
+
+        @if($submission->score === null && !$isDeadlinePassed)
+            <div class="collapse {{ ($errors->any() || request()->has('edit')) ? 'show' : '' }} mb-4" id="editSubmissionCollapse">
+                <div class="card border-0 shadow-sm p-4" style="border-radius: var(--radius-md) !important; border-top: 4px solid var(--primary) !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                        <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fas fa-edit text-primary me-2"></i> Edit Jawaban Tugas</h5>
+                        <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill"><i class="fas fa-clock me-1"></i> Dapat diubah sebelum deadline</span>
+                    </div>
+
+                    @if($assignment->isOnline())
+                        <form method="POST" action="{{ route('siswa.assignments.submit', $assignment) }}" id="editQuizForm">
+                            @csrf
+                            @foreach($assignment->questions as $question)
+                                @php $ans = $answers[$question->id] ?? null; @endphp
+                                <div class="content-card mb-3 question-card-student" style="border-left: 4px solid var(--primary);">
+                                    <div class="content-card-body">
+                                        <div class="d-flex align-items-start gap-2 mb-3">
+                                            <span class="badge bg-secondary">{{ $question->order }}</span>
+                                            @if($question->type === 'pilihan_ganda')
+                                                <span class="status-badge status-badge--online" style="font-size: 0.65rem;">Pilihan Ganda</span>
+                                            @elseif($question->type === 'isian_singkat')
+                                                <span class="status-badge status-badge--pending" style="font-size: 0.65rem;">Isian Singkat</span>
+                                            @else
+                                                <span class="status-badge status-badge--hadir" style="font-size: 0.65rem;">Essay</span>
+                                            @endif
+                                            <span class="text-muted small">({{ $question->points }} poin)</span>
+                                        </div>
+
+                                        <p class="fw-bold mb-3">{{ $question->body }}</p>
+                                        @if($question->image)
+                                            <div class="mb-3 text-start">
+                                                <img src="{{ $question->image }}" class="img-fluid rounded border" style="max-height: 250px;">
+                                            </div>
+                                        @endif
+
+                                        @if($question->type === 'pilihan_ganda')
+                                            @foreach($question->options as $opt)
+                                                @php
+                                                    $selectedOptId = old("answers.{$question->id}.selected_option_id", $ans?->selected_option_id);
+                                                @endphp
+                                                <div class="form-check mb-2 p-2 rounded border option-select">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="answers[{{ $question->id }}][selected_option_id]" 
+                                                           value="{{ $opt->id }}" 
+                                                           id="edit_opt_{{ $opt->id }}"
+                                                           {{ $selectedOptId == $opt->id ? 'checked' : '' }}>
+                                                    <label class="form-check-label w-100" for="edit_opt_{{ $opt->id }}" style="cursor: pointer;">
+                                                        <strong class="me-2">{{ $opt->label }}.</strong> {{ $opt->body }}
+                                                        @if($opt->image)
+                                                            <div class="mt-1">
+                                                                <img src="{{ $opt->image }}" class="img-fluid rounded border" style="max-height: 120px;">
+                                                            </div>
+                                                        @endif
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        @elseif($question->type === 'isian_singkat')
+                                            <input type="text" 
+                                                   name="answers[{{ $question->id }}][answer_text]" 
+                                                   class="form-control" 
+                                                   placeholder="Ketik jawaban singkat Anda..." 
+                                                   value="{{ old("answers.{$question->id}.answer_text", $ans?->answer_text) }}"
+                                                   required>
+                                        @elseif($question->type === 'essay')
+                                            <textarea name="answers[{{ $question->id }}][answer_text]" 
+                                                      class="form-control" 
+                                                      rows="4" 
+                                                      placeholder="Tuliskan jawaban essay Anda di sini..."
+                                                      required>{{ old("answers.{$question->id}.answer_text", $ans?->answer_text) }}</textarea>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-outline-secondary px-4" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse">Batal</button>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-1"></i> Simpan Perubahan Jawaban</button>
+                            </div>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('siswa.assignments.submit', $assignment) }}" enctype="multipart/form-data">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Jawaban Teks (Opsional)</label>
+                                <textarea name="answer_text" class="form-control" rows="4" placeholder="Tuliskan catatan atau jawaban singkat Anda di sini...">{{ old('answer_text', $submission->answer_text) }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Upload File Baru (Opsional, untuk mengganti file lama)</label>
+                                <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="validateFileSize(this)">
+                                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i> Maksimal ukuran file: 10 MB. Biarkan kosong jika tidak ingin mengubah file.</small>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-outline-secondary px-4" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse">Batal</button>
+                                <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="fas fa-save me-1"></i> Simpan Perubahan Tugas</button>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         <!-- Private Comments Section -->
         <div class="card border-0 shadow-sm mb-4 reveal reveal-delay-1" style="border-radius: var(--radius-md) !important;">

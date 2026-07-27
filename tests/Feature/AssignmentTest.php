@@ -235,4 +235,69 @@ class AssignmentTest extends TestCase
         $responseGuru = $this->actingAs($teacherUser)->get(route('submissions.download', $submission));
         $responseGuru->assertOk();
     }
+
+    public function test_student_can_edit_submission_before_deadline_and_cannot_after_deadline(): void
+    {
+        $teacherUser = User::factory()->create(['role' => 'guru']);
+        $teacher = Teacher::create([
+            'user_id' => $teacherUser->id,
+            'nip' => '1234567890',
+            'phone' => '08123456789',
+        ]);
+
+        $class = SchoolClass::create(['name' => 'X IPA 1']);
+        $subject = Subject::create(['name' => 'Matematika']);
+
+        $assignment = Assignment::create([
+            'teacher_id' => $teacher->id,
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'title' => 'Tugas Edit Submission',
+            'due_at' => now()->addDays(2),
+            'type' => 'pdf',
+        ]);
+
+        $studentUser = User::factory()->create(['role' => 'siswa']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'nisn' => '999888',
+            'class_id' => $class->id,
+        ]);
+
+        // 1. Submit initial answer
+        $response = $this->actingAs($studentUser)->post(route('siswa.assignments.submit', $assignment), [
+            'answer_text' => 'Jawaban awal.',
+        ]);
+        $response->assertRedirect();
+        $this->assertDatabaseHas('assignment_submissions', [
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'answer_text' => 'Jawaban awal.',
+        ]);
+
+        // 2. Edit answer before deadline
+        $response2 = $this->actingAs($studentUser)->post(route('siswa.assignments.submit', $assignment), [
+            'answer_text' => 'Jawaban revisi sebelum deadline.',
+        ]);
+        $response2->assertRedirect();
+        $this->assertDatabaseHas('assignment_submissions', [
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'answer_text' => 'Jawaban revisi sebelum deadline.',
+        ]);
+
+        // 3. Set deadline to past
+        $assignment->update(['due_at' => now()->subDay()]);
+
+        // 4. Try editing answer after deadline
+        $response3 = $this->actingAs($studentUser)->post(route('siswa.assignments.submit', $assignment), [
+            'answer_text' => 'Jawaban mencoba edit setelah deadline.',
+        ]);
+        $response3->assertSessionHasErrors(['general']);
+        $this->assertDatabaseHas('assignment_submissions', [
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'answer_text' => 'Jawaban revisi sebelum deadline.',
+        ]);
+    }
 }
