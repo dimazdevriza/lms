@@ -164,11 +164,11 @@
                                     <div class="mb-3">
                                         <textarea class="form-control form-control-sm" name="answer_text" placeholder="Catatan/Jawaban singkat (opsional)..." rows="2" style="border-radius: var(--radius-sm);"></textarea>
                                     </div>
-                                    <!-- ponytail: replace cramped input-group with standard stacked file control -->
-                                    <div class="mb-4">
-                                        <label class="form-label small text-muted mb-1 fw-bold">Unggah PDF Jawaban (Wajib)</label>
-                                        <input type="file" class="form-control form-control-sm" name="file" accept=".pdf" required style="border-radius: var(--radius-sm);">
-                                    </div>
+                                     <div class="mb-4">
+                                         <label class="form-label small text-muted mb-1 fw-bold">Unggah File Jawaban (PDF, Word, Excel, PPT)</label>
+                                         <input type="file" class="form-control form-control-sm" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="validateFileSize(this)" required style="border-radius: var(--radius-sm);">
+                                         <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;"><i class="fas fa-info-circle me-1"></i> Maksimal ukuran file: 10 MB</small>
+                                     </div>
                                     <button class="btn btn-sm btn-secondary w-100" type="submit" style="background-color: var(--primary); border: none; border-radius: var(--radius-sm); font-weight: 600; padding: 0.6rem;">Kirim Jawaban</button>
                                 </form>
                             @endif
