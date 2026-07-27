@@ -43,7 +43,7 @@
                         Mulai dengan upload materi baru untuk siswa Anda agar mereka dapat belajar secara mandiri.
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('guru.materials.create') }}" class="btn btn-outline-primary-theme text-white fw-bold px-4 py-2" style="background: var(--primary) !important; border: none; border-radius: var(--radius-sm);">Upload Sekarang</a>
+                        <a href="{{ route('guru.materials.create') }}" class="btn btn-primary fw-bold px-4 py-2" style="border-radius: var(--radius-md);"><i class="fas fa-plus me-2"></i> Upload Sekarang</a>
                     </div>
                 </div>
             </div>
