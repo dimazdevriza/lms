@@ -3,18 +3,23 @@
 @section('title', $assignment->title)
 
 @section('content')
+    @php
+        $isDeadlinePassed = $assignment->due_at && \Carbon\Carbon::parse($assignment->due_at)->isPast();
+        $backUrl = $assignment->meeting_id 
+            ? route('siswa.meetings.show', $assignment->meeting_id) 
+            : ($assignment->subject_id 
+                ? route('siswa.subjects.show', $assignment->subject_id) 
+                : route('siswa.assignments.index'));
+    @endphp
+
     <!-- Header -->
     <div class="mb-4 reveal">
         <div class="d-flex align-items-center gap-3 mb-3">
-            <a href="{{ route('siswa.assignments.index') }}" class="btn btn-outline-secondary-theme btn-sm">
+            <a href="{{ $backUrl }}" class="btn btn-outline-secondary-theme btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
             <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $submission ? '📊 Hasil Tugas' : '📝 Kerjakan Tugas' }}</h1>
         </div>
-
-        @php
-            $isDeadlinePassed = $assignment->due_at && \Carbon\Carbon::parse($assignment->due_at)->isPast();
-        @endphp
 
         <div class="content-card" style="border-top: none;">
             <div class="content-card-body pt-4">
