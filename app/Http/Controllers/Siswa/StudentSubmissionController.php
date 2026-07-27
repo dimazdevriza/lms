@@ -96,12 +96,13 @@ class StudentSubmissionController extends Controller
             return back()->withErrors(['general' => 'Batas waktu pengumpulan tugas ini sudah lewat. Anda tidak dapat mengumpulkan atau mengubah tugas lagi.']);
         }
 
-        // Check if existing submission has already been graded
-        $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
+        // Check if existing non-deleted submission has already been graded
+        $existingSubmission = AssignmentSubmission::withTrashed()
+            ->where('assignment_id', $assignment->id)
             ->where('student_id', $student->id)
             ->first();
 
-        if ($existingSubmission && $existingSubmission->score !== null) {
+        if ($existingSubmission && !$existingSubmission->trashed() && $existingSubmission->score !== null) {
             return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat diubah lagi.']);
         }
 
@@ -135,13 +136,15 @@ class StudentSubmissionController extends Controller
             $filePath = $request->file('file')->store('submissions', 'local');
         }
 
-        $msg = 'Tugas berhasil dikirim.';
-
-        $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+        $submission = AssignmentSubmission::withTrashed()
+            ->where('assignment_id', $assignment->id)
             ->where('student_id', $student->id)
             ->first();
 
         if ($submission) {
+            if ($submission->trashed()) {
+                $submission->restore();
+            }
             if ($filePath && $submission->file_path && $submission->file_path !== $filePath) {
                 Storage::disk('local')->delete($submission->file_path);
             }
@@ -150,33 +153,16 @@ class StudentSubmissionController extends Controller
                 'file_path' => $filePath ?? $submission->file_path,
                 'submitted_at' => now(),
             ]);
-            $msg = 'Tugas berhasil diperbarui.';
+            $msg = 'Tugas berhasil dikirim.';
         } else {
-            try {
-                AssignmentSubmission::create([
-                    'assignment_id' => $assignment->id,
-                    'student_id' => $student->id,
-                    'answer_text' => $data['answer_text'] ?? null,
-                    'file_path' => $filePath,
-                    'submitted_at' => now(),
-                ]);
-                $msg = 'Tugas berhasil dikirim.';
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
-                    ->where('student_id', $student->id)
-                    ->first();
-                if ($submission) {
-                    if ($filePath && $submission->file_path && $submission->file_path !== $filePath) {
-                        Storage::disk('local')->delete($submission->file_path);
-                    }
-                    $submission->update([
-                        'answer_text' => array_key_exists('answer_text', $data) ? $data['answer_text'] : $submission->answer_text,
-                        'file_path' => $filePath ?? $submission->file_path,
-                        'submitted_at' => now(),
-                    ]);
-                }
-                $msg = 'Tugas berhasil diperbarui.';
-            }
+            AssignmentSubmission::create([
+                'assignment_id' => $assignment->id,
+                'student_id' => $student->id,
+                'answer_text' => $data['answer_text'] ?? null,
+                'file_path' => $filePath,
+                'submitted_at' => now(),
+            ]);
+            $msg = 'Tugas berhasil dikirim.';
         }
 
         // Notify Teacher of submission
@@ -206,7 +192,8 @@ class StudentSubmissionController extends Controller
         $questions = $assignment->questions;
 
         // Check if existing submission
-        $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
+        $existingSubmission = AssignmentSubmission::withTrashed()
+            ->where('assignment_id', $assignment->id)
             ->where('student_id', $student->id)
             ->first();
 
@@ -241,33 +228,21 @@ class StudentSubmissionController extends Controller
 
         DB::beginTransaction();
         try {
-            if (!$existingSubmission) {
-                $existingSubmission = AssignmentSubmission::where('assignment_id', $assignment->id)
-                    ->where('student_id', $student->id)
-                    ->first();
-            }
-
             if ($existingSubmission) {
+                if ($existingSubmission->trashed()) {
+                    $existingSubmission->restore();
+                }
                 QuestionAnswer::where('assignment_submission_id', $existingSubmission->id)->delete();
                 $submission = $existingSubmission;
                 $submission->update(['submitted_at' => now()]);
-                $msg = 'Jawaban berhasil diperbarui!';
+                $msg = 'Jawaban berhasil dikirim!';
             } else {
-                try {
-                    $submission = AssignmentSubmission::create([
-                        'assignment_id' => $assignment->id,
-                        'student_id' => $student->id,
-                        'submitted_at' => now(),
-                    ]);
-                    $msg = 'Jawaban berhasil dikirim!';
-                } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                    $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
-                        ->where('student_id', $student->id)
-                        ->first();
-                    QuestionAnswer::where('assignment_submission_id', $submission->id)->delete();
-                    $submission->update(['submitted_at' => now()]);
-                    $msg = 'Jawaban berhasil diperbarui!';
-                }
+                $submission = AssignmentSubmission::create([
+                    'assignment_id' => $assignment->id,
+                    'student_id' => $student->id,
+                    'submitted_at' => now(),
+                ]);
+                $msg = 'Jawaban berhasil dikirim!';
             }
 
             $totalScore = 0;
@@ -380,7 +355,7 @@ class StudentSubmissionController extends Controller
         // Delete question answers if online assignment
         QuestionAnswer::where('assignment_submission_id', $submission->id)->delete();
 
-        $submission->delete();
+        $submission->forceDelete();
 
         return back()->with('success', 'Pengiriman tugas berhasil dibatalkan.');
     }
