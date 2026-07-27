@@ -127,6 +127,8 @@ class StudentSubmissionController extends Controller
             $filePath = $request->file('file')->store('submissions', 'local');
         }
 
+        $msg = 'Tugas berhasil dikirim.';
+
         $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
             ->where('student_id', $student->id)
             ->first();
@@ -164,8 +166,8 @@ class StudentSubmissionController extends Controller
                         'file_path' => $filePath ?? $submission->file_path,
                         'submitted_at' => now(),
                     ]);
-                    $msg = 'Tugas berhasil diperbarui.';
                 }
+                $msg = 'Tugas berhasil diperbarui.';
             }
         }
 
