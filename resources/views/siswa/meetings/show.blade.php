@@ -143,10 +143,12 @@
 
                             @if($submission)
                                 <div class="alert alert-success py-2 px-3 small border-0 mb-0">
-                                    <i class="fas fa-check-circle me-1"></i> Anda sudah mengumpulkan tugas ini.
-                                    @if($a->type === 'online')
-                                        <a href="{{ route('siswa.assignments.show', $a) }}" class="d-block mt-2 btn btn-sm btn-outline-success">Lihat Hasil</a>
-                                    @endif
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                        <span><i class="fas fa-check-circle me-1"></i> Anda sudah mengumpulkan tugas ini.</span>
+                                        <a href="{{ route('siswa.assignments.show', $a) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-edit me-1"></i> Lihat / Edit Jawaban
+                                        </a>
+                                    </div>
                                 </div>
                             @elseif($a->due_at && \Carbon\Carbon::parse($a->due_at)->isPast())
                                 <div class="alert alert-danger py-2 px-3 small border-0 mb-0">
