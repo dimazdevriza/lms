@@ -51,54 +51,64 @@
     @else
         <div class="row">
             @forelse($materials as $m)
-                <div class="col-md-6 mb-4 reveal reveal-delay-{{ $loop->iteration }}">
-                    <div class="content-card h-100 material-card overflow-hidden d-flex flex-column justify-content-between" 
-                         style="cursor: pointer; border-left: 4px solid var(--primary) !important; border-radius: var(--radius-lg); transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);"
+                <div class="col-xl-4 col-md-6 mb-4">
+                    <div class="content-card h-100 d-flex flex-column justify-content-between shadow-sm border-0 material-card overflow-hidden" 
+                         style="cursor: pointer; border-left: 4px solid var(--primary) !important; border-radius: var(--radius-md); transition: transform 0.2s ease, box-shadow 0.2s ease;"
                          onclick="window.location='{{ route('guru.materials.show', $m) }}'">
                         
-                        <div class="content-card-body p-4 flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h5 class="card-title fw-bold mb-2 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700;">{{ $m->title }}</h5>
-                                    <span class="status-badge status-badge--hadir">📖 Materi</span>
+                        <div class="content-card-body p-3 flex-grow-1">
+                            <!-- Top Title & Badge -->
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <h6 class="fw-bold mb-1 text-truncate" style="color: var(--primary); font-family: 'Plus Jakarta Sans', sans-serif;" title="{{ $m->title }}">
+                                        {{ $m->title }}
+                                    </h6>
+                                    <span class="status-badge status-badge--hadir py-0 px-2" style="font-size: 0.7rem;">📖 Materi</span>
                                 </div>
-                                <small class="text-muted"><i class="fas fa-calendar me-1"></i> {{ $m->created_at->format('d M Y') }}</small>
+                                <span class="badge bg-light text-muted fw-normal flex-shrink-0" style="font-size: 0.7rem;">
+                                    <i class="fas fa-calendar me-1"></i>{{ $m->created_at->format('d M Y') }}
+                                </span>
                             </div>
 
-                            <div class="mb-3 d-flex flex-wrap gap-3">
-                                <span class="d-inline-flex align-items-center small text-muted"><i class="fas fa-door-open me-2 text-primary"></i> {{ $m->schoolClass?->name ?? 'Tanpa Kelas' }}</span>
-                                <span class="d-inline-flex align-items-center small text-muted"><i class="fas fa-book me-2 text-success"></i> {{ $m->subject?->name ?? 'Tanpa Mapel' }}</span>
+                            <!-- Class & Subject -->
+                            <div class="small text-muted mb-2.5 d-flex align-items-center gap-2 flex-wrap" style="font-size: 0.8rem;">
+                                <span><i class="fas fa-door-open me-1 text-primary"></i>{{ $m->schoolClass?->name ?? 'Tanpa Kelas' }}</span>
+                                <span>•</span>
+                                <span><i class="fas fa-book me-1 text-success"></i>{{ $m->subject?->name ?? 'Tanpa Mapel' }}</span>
                             </div>
 
+                            <!-- Meeting Info -->
                             @if($m->meeting)
-                                <div class="alert alert-light py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2" style="border-radius: var(--radius-sm); background-color: var(--bg-body);">
-                                    <i class="fas fa-calendar-alt text-warning"></i>
-                                    <span>Terhubung ke: <strong style="color: var(--primary);">Pertemuan {{ $m->meeting->number }}</strong></span>
+                                <div class="bg-light rounded p-2 mb-3 small" style="font-size: 0.78rem;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="text-muted"><i class="fas fa-calendar-alt text-warning me-1"></i> Pertemuan:</span>
+                                        <strong style="color: var(--primary);">Pertemuan {{ $m->meeting->number }}</strong>
+                                    </div>
                                 </div>
                             @endif
 
+                            <!-- Attachment Indicator -->
                             @if($m->file_path)
-                                <div class="mt-3 p-3 border rounded text-center" style="border-color: rgba(37, 103, 30, 0.08) !important; background: var(--bg-body); border-radius: var(--radius-md) !important;">
-                                    <i class="fas fa-file-pdf text-danger fa-2x mb-2"></i>
-                                    <div class="small fw-bold text-dark">PDF Terlampir</div>
-                                    <a href="{{ asset('storage/' . $m->file_path) }}" target="_blank" class="small text-decoration-none text-success fw-bold d-inline-block mt-1" onclick="event.stopPropagation();">
-                                        <i class="fas fa-eye me-1"></i> Lihat Dokumen
-                                    </a>
+                                <div class="d-flex align-items-center justify-content-between small" style="font-size: 0.8rem;">
+                                    <span class="status-badge py-0 px-2" style="background: rgba(220,53,69,0.08); color: #dc3545; font-size: 0.75rem;" onclick="event.stopPropagation(); window.open('{{ asset('storage/' . $m->file_path) }}', '_blank')">
+                                        <i class="fas fa-file-pdf me-1"></i>PDF Terlampir
+                                    </span>
                                 </div>
                             @endif
                         </div>
 
-                        <div class="card-footer bg-white border-top-0 p-4 pt-0 d-flex justify-content-end gap-2 align-items-center" onclick="event.stopPropagation();" style="border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
-                            <a href="{{ route('guru.materials.show', $m) }}" class="btn btn-sm btn-outline-secondary-theme" title="Lihat Detail">
+                        <!-- Card Actions Footer -->
+                        <div class="px-3 py-2 bg-white d-flex justify-content-end gap-2 align-items-center" onclick="event.stopPropagation();" style="border-top: 1px solid rgba(0,0,0,0.05);">
+                            <a href="{{ route('guru.materials.show', $m) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Lihat Detail">
                                 <i class="fas fa-eye me-1"></i> Detail
                             </a>
-                            <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-outline-primary-theme" title="Edit">
+                            <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-outline-primary py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Edit">
                                 <i class="fas fa-edit me-1"></i> Edit
                             </a>
                             <form action="{{ route('guru.materials.destroy', $m) }}" method="POST" onsubmit="return confirm('Hapus materi ini?')" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus" style="border-radius: var(--radius-sm);">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
