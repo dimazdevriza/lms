@@ -1,23 +1,26 @@
 /* ── Design Tokens ── */
 :root {
     --primary: #1B5E20;
+    --primary-hover: #144918;
     --primary-light: #2E7D32;
     --secondary: #43A047;
     --accent: #F9A825;
-    --bg-body: #FAFAF7;
-    --text-heading: #1A1A1A;
-    --text-body: #4A4A4A;
+    --accent-hover: #F57F17;
+    --bg-dark: #0B2B0E;
+    --text-heading: #0F172A;
+    --text-sub: #475569;
+    --text-muted: #64748B;
     --radius-lg: 24px;
-    --radius-md: 14px;
-    --radius-sm: 10px;
-    --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ── Reset & Base Styles ── */
 html, body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -27,7 +30,7 @@ html, body {
     box-sizing: border-box;
 }
 
-/* ── Disable Browser Native Password Reveal Icon ── */
+/* Disable Browser Native Password Reveal Icon */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear,
 input[type="password"]::-webkit-contacts-auto-fill-button,
@@ -40,126 +43,255 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 
 body {
-    background: radial-gradient(circle at center, #1B5E20 0%, #0E3E11 100%) !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: var(--text-body);
+    background: linear-gradient(135deg, #09240A 0%, #154D19 50%, #0A260C 100%) !important;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-heading);
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
     -webkit-font-smoothing: antialiased;
 }
 
-/* ── Login Layout Container ── */
+/* ── Ambient Background Glow Spheres ── */
+.ambient-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+}
+
+.orb-1 {
+    width: 350px;
+    height: 350px;
+    background: rgba(249, 168, 37, 0.25);
+    top: -50px;
+    left: -50px;
+    animation: orbFloat 14s infinite alternate ease-in-out;
+}
+
+.orb-2 {
+    width: 450px;
+    height: 450px;
+    background: rgba(67, 160, 71, 0.35);
+    bottom: -100px;
+    right: -100px;
+    animation: orbFloat 18s infinite alternate-reverse ease-in-out;
+}
+
+.orb-3 {
+    width: 250px;
+    height: 250px;
+    background: rgba(46, 125, 50, 0.3);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes orbFloat {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 30px) scale(1.1); }
+}
+
+/* ── Main Outer Container ── */
 .login-container {
     width: 100%;
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 1.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.75rem;
-    max-width: 480px;
-    animation: scaleIn 0.5s var(--ease-out);
-    margin: auto; /* ponytail: auto margin centers flex child and allows scrolling without top clipping on overflow */
+    gap: 1.5rem;
+    max-width: 440px;
+    z-index: 1;
+    margin: auto;
+    animation: loginCardAppear 0.6s var(--ease-out);
 }
 
+@keyframes loginCardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ── Glassmorphism Elevated Card ── */
+.login-card {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    padding: 2.25rem 2rem;
+}
+
+/* ── Brand Header & Logo ── */
 .logo-wrapper {
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
 .logo-wrapper img {
-    width: 6.5rem;
-    height: 6.5rem;
+    width: 4.75rem;
+    height: 4.75rem;
     object-fit: contain;
     border-radius: 50%;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
     background-color: #FFFFFF;
-    padding: 0.65rem;
-    display: block;
-    transition: transform 0.3s var(--ease-spring);
+    padding: 0.5rem;
+    box-shadow: 
+        0 10px 25px -5px rgba(27, 94, 32, 0.3),
+        0 0 0 4px rgba(249, 168, 37, 0.25);
+    transition: transform 0.35s var(--ease-spring);
 }
 
 .logo-wrapper img:hover {
-    transform: scale(1.06) rotate(3deg);
+    transform: scale(1.08) rotate(4deg);
 }
 
-/* ── Custom Form Box ── */
-.form-box {
-    width: 100%;
-    background-color: #FFFFFF;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-    border-top: 5px solid var(--primary);
-    padding: 2.5rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.5);
-    border-right: 1px solid rgba(255, 255, 255, 0.5);
+.school-brand-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin-top: 0.75rem;
+    margin-bottom: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 /* ── Headings & Titles ── */
 .page-heading {
-    margin-bottom: 2rem;
     text-align: center;
+    margin-bottom: 1.75rem;
 }
 
 .page-heading h2 {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 1.75rem;
+    font-size: 1.65rem;
     font-weight: 800;
-    color: var(--primary);
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.02em;
+    color: var(--text-heading);
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.03em;
 }
 
 .page-heading p {
     font-size: 0.9rem;
-    color: #6B7280;
+    color: var(--text-sub);
     margin: 0;
     font-weight: 500;
 }
 
-/* ── Form Controls & Inputs ── */
+/* ── Form Controls & Input Icons ── */
 .form-group {
     margin-bottom: 1.25rem;
 }
 
 .form-label {
     display: block;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-sub);
     margin-bottom: 0.45rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.06em;
+}
+
+.input-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    color: #94A3B8;
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: color 0.2s var(--ease-out);
 }
 
 .form-input {
     width: 100%;
+    height: 48px;
     padding: 0.75rem 1rem;
-    border: 2px solid #E2E8F0;
+    border: 1.5px solid #E2E8F0;
     border-radius: var(--radius-md);
-    font-size: 0.95rem;
+    font-size: 0.925rem;
+    font-family: inherit;
     color: var(--text-heading);
-    background-color: #FFFFFF;
-    transition: all 0.25s var(--ease-out);
+    background-color: #F8FAFC;
+    transition: all 0.2s var(--ease-out);
+}
+
+.form-input.has-icon {
+    padding-left: 2.65rem;
 }
 
 .form-input::placeholder {
-    color: #A0AEC0;
+    color: #94A3B8;
 }
 
 .form-input:focus {
     outline: none;
-    border-color: var(--secondary);
-    box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.12);
+    border-color: var(--primary-light);
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.12);
 }
 
-/* ── Checkbox custom style ── */
+.form-input:focus + .input-icon,
+.input-icon-wrapper:focus-within .input-icon {
+    color: var(--primary-light);
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.2s ease;
+}
+
+.btn-toggle-password:hover {
+    color: var(--text-heading);
+}
+
+/* ── Checkbox & Forgot Password Row ── */
+.form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
 .remember-checkbox {
     display: inline-flex;
     align-items: center;
     cursor: pointer;
     user-select: none;
-    margin-top: 0.5rem;
 }
 
 .remember-checkbox input[type="checkbox"] {
@@ -167,67 +299,131 @@ body {
     width: 1.05rem;
     height: 1.05rem;
     border-radius: 4px;
-    margin-right: 0.5rem;
+    margin-right: 0.45rem;
+    cursor: pointer;
 }
 
 .remember-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #4A5568;
-}
-
-/* ── Buttons ── */
-.btn-login {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.8rem 1.5rem;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
     font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.25s var(--ease-spring);
-    box-shadow: 0 4px 12px rgba(27, 94, 32, 0.15);
-}
-
-.btn-login:hover {
-    background-color: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(27, 94, 32, 0.22);
-}
-
-.btn-login:focus {
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(249, 168, 37, 0.3);
+    font-weight: 500;
+    color: var(--text-sub);
 }
 
 .forgot-link {
-    color: var(--primary-light);
+    color: var(--primary);
     text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
     transition: color 0.2s var(--ease-out);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-    margin: 0;
 }
 
 .forgot-link:hover {
-    color: var(--primary);
+    color: var(--primary-hover);
     text-decoration: underline;
 }
 
-/* ── Form Errors ── */
+/* ── Primary Login Button ── */
+.btn-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring);
+    box-shadow: 0 8px 20px -4px rgba(27, 94, 32, 0.4);
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, #144918 0%, #1B5E20 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -4px rgba(27, 94, 32, 0.5);
+}
+
+.btn-login:active {
+    transform: translateY(0) scale(0.99);
+}
+
+/* ── Parent Access Divider & Button ── */
+.parent-access-divider {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #E2E8F0;
+    text-align: center;
+}
+
+.parent-access-label {
+    font-size: 0.825rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.btn-parent-access {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 46px;
+    background-color: rgba(249, 168, 37, 0.12);
+    color: #B26A00;
+    border: 1.5px solid rgba(249, 168, 37, 0.4);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring);
+}
+
+.btn-parent-access:hover {
+    background-color: var(--accent);
+    color: #FFFFFF;
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(249, 168, 37, 0.4);
+}
+
+/* ── WhatsApp Support Button ── */
+.btn-whatsapp-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 46px;
+    background-color: #25D366;
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring);
+    box-shadow: 0 6px 16px -2px rgba(37, 211, 102, 0.35);
+    margin-top: 0.75rem;
+}
+
+.btn-whatsapp-help:hover {
+    background-color: #1EBE57;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -2px rgba(37, 211, 102, 0.45);
+}
+
+/* ── Form Error Feedback ── */
 .form-error {
-    color: #DC2626;
+    color: #E11D48;
     font-size: 0.8rem;
     margin-top: 0.45rem;
     font-weight: 600;
@@ -237,27 +433,26 @@ body {
     margin: 0;
 }
 
-/* ── Animations ── */
-@keyframes scaleIn {
-    from {
-        opacity: 0;
-        transform: scale(0.96) translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+/* ── Footer Credit ── */
+.footer-credit {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.75rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
 }
 
-/* ── Legacy Hex Colors Inline Override ── */
-[style*="background-color: #F2B50B" i],
-[style*="background-color:#F2B50B" i] {
-    background-color: var(--accent) !important;
-    border-color: var(--accent) !important;
-    color: var(--primary) !important;
-}
-
-[style*="color: #25671E" i],
-[style*="color:#25671E" i] {
-    color: var(--primary) !important;
+/* ── Mobile Responsive Adjustments ── */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 1.5rem 1rem;
+    }
+    .login-card {
+        padding: 1.75rem 1.25rem;
+        border-radius: 20px;
+    }
+    .page-heading h2 {
+        font-size: 1.45rem;
+    }
 }

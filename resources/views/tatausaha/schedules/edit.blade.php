@@ -60,11 +60,27 @@
                             @foreach($timeSlots as $slot)
                                 <tr class="{{ $slot->isBreak() ? 'break-row' : 'lesson-row' }}">
                                     {{-- Kolom Waktu --}}
-                                    <td class="slot-label-cell">
+                                    <td class="slot-label-cell" 
+                                        style="cursor: pointer;" 
+                                        title="Klik untuk edit jam pelajaran ini"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editTimeSlotModal"
+                                        data-slot-order="{{ $slot->slot_order }}"
+                                        data-label="{{ $slot->label }}"
+                                        data-type="{{ $slot->type }}"
+                                        data-start="{{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}"
+                                        data-end="{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}">
                                         <div class="slot-label {{ $slot->isBreak() ? 'break-label' : '' }}">
-                                            <div class="fw-bold small">{{ $slot->label }}</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;">
-                                                {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                                            <div class="fw-bold text-dark" style="font-size: 0.88rem; font-family: 'Plus Jakarta Sans', sans-serif;">
+                                                {{ $slot->label }}
+                                            </div>
+                                            <div class="fw-bold" style="font-size: 0.78rem; color: #0f172a; margin-top: 2px;">
+                                                <i class="far fa-clock me-1 text-success" style="font-size: 0.72rem;"></i>{{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                                            </div>
+                                            <div class="mt-1">
+                                                <span class="badge" style="background: rgba(67, 160, 71, 0.12); color: #1e7e34; font-size: 0.65rem; font-weight: 700; border: 1px solid rgba(67, 160, 71, 0.3);">
+                                                    <i class="fas fa-pen me-1"></i> Edit Waktu
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -163,6 +179,56 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="editTimeSlotModal" aria-labelledby="editTimeSlotModalLabel" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 14px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" id="editTimeSlotModalLabel" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary);">
+                        <i class="fas fa-clock text-success me-2"></i> Edit Jam Pelajaran
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ route('tatausaha.schedules.time-slots.store') }}">
+                    @csrf
+                    <input type="hidden" name="academic_year_id" value="{{ $selectedYearId }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Urutan Slot</label>
+                            <input type="number" name="slot_order" id="modal_slot_order" class="form-control form-control-sm" min="1" required placeholder="Nomor urut slot (misal: 1)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Tipe Slot</label>
+                            <select name="type" id="modal_type" class="form-select form-select-sm" required>
+                                <option value="lesson">📖 Pelajaran</option>
+                                <option value="break">☕ Istirahat</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Label Jam / Waktu</label>
+                            <input type="text" name="label" id="modal_label" class="form-control form-control-sm" required placeholder="Misal: Jam ke-1">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Jam Mulai</label>
+                                <input type="time" name="start_time" id="modal_start_time" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Jam Selesai</label>
+                                <input type="time" name="end_time" id="modal_end_time" class="form-control form-control-sm" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary-theme btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-outline-primary-theme btn-sm">
+                            <i class="fas fa-save me-1"></i> Simpan Jam Pelajaran
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endpush
 
 @push('styles')
@@ -212,6 +278,16 @@
         left: 0;
         z-index: 1;
         box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .slot-label-cell:hover {
+        background-color: #e8f5e9 !important;
+    }
+
+    .slot-label-cell:hover .slot-edit-icon {
+        color: var(--primary) !important;
+        opacity: 1 !important;
     }
 
     .slot-label {
@@ -280,22 +356,24 @@
         outline: none !important;
         padding: 2px 1.1rem 2px 4px !important;
         background-position: right 0.2rem center !important;
-        background-size: 8px 6px !important;
-        height: 24px !important;
+        background-size: 9px 7px !important;
         border-radius: 4px;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     }
 
     .subject-select {
-        font-size: 0.72rem !important;
+        font-size: 0.82rem !important;
         font-weight: 700 !important;
-        color: var(--primary) !important;
+        color: #0f172a !important;
+        height: 28px !important;
     }
 
     .teacher-select {
-        font-size: 0.65rem !important;
-        color: #718096 !important;
-        margin-top: -1px;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-top: 1px;
+        height: 26px !important;
     }
 
     .subject-select option,
@@ -421,5 +499,20 @@
             }
         });
     });
+
+    const editTimeSlotModal = document.getElementById('editTimeSlotModal');
+    if (editTimeSlotModal) {
+        editTimeSlotModal.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            const cell = trigger ? (trigger.closest('.slot-label-cell') || trigger) : null;
+            if (!cell) return;
+
+            document.getElementById('modal_slot_order').value = cell.getAttribute('data-slot-order') || '';
+            document.getElementById('modal_type').value = cell.getAttribute('data-type') || 'lesson';
+            document.getElementById('modal_label').value = cell.getAttribute('data-label') || '';
+            document.getElementById('modal_start_time').value = cell.getAttribute('data-start') || '';
+            document.getElementById('modal_end_time').value = cell.getAttribute('data-end') || '';
+        });
+    }
 </script>
 @endsection

@@ -41,7 +41,7 @@
                         <th class="py-3">Guru Pengampu</th>
                         <th class="py-3">Topik / Judul Pertemuan</th>
                         <th class="py-3">Status Presensi</th>
-                        <th class="text-end pe-4 py-3" style="min-width: 340px;">Aksi</th>
+                        <th class="text-end pe-4 py-3" style="width: 220px; white-space: nowrap;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,18 +100,18 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-end pe-4">
-                                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
-                                    <a href="{{ route('admin.attendances.meetingMaterials', $meeting->id) }}" class="btn btn-sm btn-outline-info rounded-3">
-                                        <i class="fas fa-book me-1"></i> Kelola Materi @if($meeting->materials->count() > 0)<span class="badge bg-info-subtle text-info ms-1">{{ $meeting->materials->count() }}</span>@endif
+                            <td class="text-end pe-4" style="white-space: nowrap;">
+                                <div class="d-inline-flex gap-1 justify-content-end align-items-center flex-nowrap">
+                                    <a href="{{ route('admin.attendances.meetingMaterials', $meeting->id) }}" class="btn btn-outline-info rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" title="Kelola Materi Pertemuan #{{ $meeting->number }}">
+                                        <i class="fas fa-book me-1" style="font-size: 0.7rem;"></i> Materi @if($meeting->materials->count() > 0)<span class="badge bg-info text-white ms-1 rounded-pill" style="font-size: 0.65rem; padding: 2px 5px;">{{ $meeting->materials->count() }}</span>@endif
                                     </a>
 
-                                    <a href="{{ route('admin.attendances.meetingAssignments', $meeting->id) }}" class="btn btn-sm btn-outline-warning rounded-3">
-                                        <i class="fas fa-file-alt me-1"></i> Kelola Tugas @if($meeting->assignments->count() > 0)<span class="badge bg-warning-subtle text-warning ms-1">{{ $meeting->assignments->count() }}</span>@endif
+                                    <a href="{{ route('admin.attendances.meetingAssignments', $meeting->id) }}" class="btn btn-outline-warning text-dark rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" title="Kelola Tugas Pertemuan #{{ $meeting->number }}">
+                                        <i class="fas fa-file-alt me-1" style="font-size: 0.7rem;"></i> Tugas @if($meeting->assignments->count() > 0)<span class="badge bg-warning text-dark ms-1 rounded-pill" style="font-size: 0.65rem; padding: 2px 5px;">{{ $meeting->assignments->count() }}</span>@endif
                                     </a>
 
-                                    <a href="{{ route('admin.attendances.editMeeting', $meeting->id) }}" class="btn btn-sm btn-outline-primary rounded-3">
-                                        <i class="fas fa-user-check me-1"></i> {{ $att ? 'Edit Presensi' : 'Isi Presensi' }}
+                                    <a href="{{ route('admin.attendances.editMeeting', $meeting->id) }}" class="btn {{ $att ? 'btn-outline-success' : 'btn-primary' }} rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" title="{{ $att ? 'Edit Presensi' : 'Isi Presensi' }}">
+                                        <i class="fas {{ $att ? 'fa-user-check' : 'fa-pen' }} me-1" style="font-size: 0.7rem;"></i> {{ $att ? 'Edit' : 'Presensi' }}
                                     </a>
                                 </div>
                             </td>

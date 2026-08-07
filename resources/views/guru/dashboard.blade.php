@@ -196,8 +196,42 @@
             </div>
         </div>
 
-        <!-- Right Column: Quick Actions + Tugas Perlu Dinilai -->
+        <!-- Right Column: Mini Calendar, Quick Actions + Tugas Perlu Dinilai -->
         <div class="col-md-5 mb-4 reveal reveal-delay-3">
+            @php
+                $calendarEvents = [];
+                if (isset($todaySchedules) && $todaySchedules->isNotEmpty()) {
+                    foreach ($todaySchedules as $sch) {
+                        $calendarEvents[] = [
+                            'date' => now()->toDateString(),
+                            'title' => 'Mengajar: ' . ($sch->subject->name ?? $sch->activity ?? 'Kelas'),
+                            'time' => substr($sch->start_time ?? '08:00', 0, 5),
+                            'subtitle' => 'Kelas ' . ($sch->schoolClass->name ?? ''),
+                            'icon' => 'fas fa-chalkboard-teacher',
+                            'url' => route('guru.meetings.index')
+                        ];
+                    }
+                }
+                if (isset($recentPendingAssignments) && $recentPendingAssignments->isNotEmpty()) {
+                    foreach ($recentPendingAssignments as $asg) {
+                        if ($asg->due_at) {
+                            $dueDate = \Carbon\Carbon::parse($asg->due_at)->toDateString();
+                            $calendarEvents[] = [
+                                'date' => $dueDate,
+                                'title' => 'Deadline Tugas: ' . $asg->title,
+                                'time' => \Carbon\Carbon::parse($asg->due_at)->format('H:i'),
+                                'subtitle' => 'Kelas ' . ($asg->schoolClass?->name ?? ''),
+                                'icon' => 'fas fa-file-alt',
+                                'url' => route('guru.assignments.show', $asg->id)
+                            ];
+                        }
+                    }
+                }
+            @endphp
+
+            <!-- Mini Calendar Widget -->
+            @include('partials.mini-calendar', ['events' => $calendarEvents])
+
             <!-- Aksi Cepat -->
             <div class="content-card mb-4">
                 <div class="content-card-header">

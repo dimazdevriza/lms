@@ -178,8 +178,42 @@
             </div>
         </div>
 
-        <!-- Quick Actions Section -->
+        <!-- Right Column: Mini Calendar & Quick Actions -->
         <div class="col-md-5 mb-4 reveal reveal-delay-3">
+            @php
+                $calendarEvents = [];
+                if (isset($todaySchedules) && $todaySchedules->isNotEmpty()) {
+                    foreach ($todaySchedules as $sch) {
+                        $calendarEvents[] = [
+                            'date' => now()->toDateString(),
+                            'title' => $sch->subject->name ?? $sch->activity ?? 'Jadwal Kelas',
+                            'time' => substr($sch->start_time ?? $sch->timeSlot?->start_time ?? '08:00', 0, 5),
+                            'subtitle' => $sch->slot_label ?? 'Jadwal Pelajaran',
+                            'icon' => 'fas fa-book-open',
+                            'url' => route('siswa.subjects.index')
+                        ];
+                    }
+                }
+                if (isset($recentAssignments) && $recentAssignments->isNotEmpty()) {
+                    foreach ($recentAssignments as $asg) {
+                        if ($asg->due_at) {
+                            $dueDate = \Carbon\Carbon::parse($asg->due_at)->toDateString();
+                            $calendarEvents[] = [
+                                'date' => $dueDate,
+                                'title' => 'Tenggat: ' . $asg->title,
+                                'time' => \Carbon\Carbon::parse($asg->due_at)->format('H:i'),
+                                'subtitle' => $asg->subject?->name ?? 'Tugas Kelas',
+                                'icon' => 'fas fa-tasks',
+                                'url' => route('siswa.assignments.show', $asg->id)
+                            ];
+                        }
+                    }
+                }
+            @endphp
+
+            <!-- Mini Calendar Widget -->
+            @include('partials.mini-calendar', ['events' => $calendarEvents])
+
             <div class="content-card mb-4">
                 <div class="content-card-header">
                     <div class="content-card-header-icon">

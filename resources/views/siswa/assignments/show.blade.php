@@ -333,24 +333,42 @@
 
                     @if($submission->file_path)
                         @php
-                            $subIsPdf = Str::endsWith(strtolower($submission->file_path), '.pdf');
                             $subExtension = pathinfo($submission->file_path, PATHINFO_EXTENSION);
+                            $subIsPdf = Str::endsWith(strtolower($submission->file_path), '.pdf');
+                            $subIsAudio = in_array(strtolower($subExtension), ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma']);
                             $subIcon = match(strtolower($subExtension)) {
                                 'pdf' => 'fa-file-pdf text-danger',
                                 'doc', 'docx' => 'fa-file-word text-primary',
                                 'xls', 'xlsx' => 'fa-file-excel text-success',
                                 'ppt', 'pptx' => 'fa-file-powerpoint text-warning',
+                                'mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', '3gp' => 'fa-microphone-alt text-success',
                                 default => 'fa-file-alt text-secondary'
                             };
                         @endphp
                         <div class="mb-3">
-                            <label class="form-label fw-bold text-dark"><i class="fas {{ $subIcon }} me-1"></i> File Lampiran Anda ({{ strtoupper($subExtension) }}):</label>
+                            <label class="form-label fw-bold text-dark"><i class="fas {{ $subIcon }} me-1"></i> Berkas Lampiran Anda ({{ strtoupper($subExtension) }}):</label>
                             <div class="d-flex align-items-center gap-2 mb-3">
                                 <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm btn-outline-secondary-theme">
                                     <i class="fas fa-download me-1"></i> Unduh File
                                 </a>
                             </div>
-                            @if($subIsPdf)
+                            @if($subIsAudio)
+                                <div class="card p-3 border shadow-sm rounded-3 mb-3" style="background: linear-gradient(135deg, rgba(27,94,32,0.04), rgba(67,160,71,0.01)); border-color: rgba(27,94,32,0.15) !important;">
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px; font-size: 1.1rem;">
+                                            <i class="fas fa-microphone-alt"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">Rekaman Suara / Audisi Anda</h6>
+                                            <small class="text-muted">Format: {{ strtoupper($subExtension) }}</small>
+                                        </div>
+                                    </div>
+                                    <audio controls class="w-100 mt-2">
+                                        <source src="{{ route('submissions.download', $submission) }}">
+                                        Browser Anda tidak mendukung pemutar audio.
+                                    </audio>
+                                </div>
+                            @elseif($subIsPdf)
                                 <div class="rounded border" style="overflow: hidden; height: 500px; background: #f8f9fa;">
                                     <iframe src="{{ route('submissions.download', $submission) }}" width="100%" height="100%" frameborder="0"></iframe>
                                 </div>
@@ -526,18 +544,77 @@
             <div class="content-card mb-4 reveal reveal-delay-2">
                 <div class="content-card-body">
                     <h5 class="fw-bold text-dark mb-3" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fas fa-paper-plane text-primary me-2"></i> Kirim Jawaban</h5>
-                    <form method="POST" action="{{ route('siswa.assignments.submit', $assignment) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('siswa.assignments.submit', $assignment) }}" enctype="multipart/form-data" id="studentSubmissionForm">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label fw-bold">Jawaban Teks (Opsional)</label>
-                            <textarea class="form-control" name="answer_text" placeholder="Ketik jawaban Anda di sini..." rows="4"></textarea>
+                            <textarea class="form-control" name="answer_text" placeholder="Ketik jawaban Anda atau keterangan tambahan di sini..." rows="3"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Upload File Dokumen (Opsional)</label>
-                            <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="validateFileSize(this)">
-                            <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle text-primary me-1"></i> Format file: PDF, Word, Excel, PPT. <strong class="text-dark">Maksimal 10 MB</strong>.</small>
+
+                        <!-- Voice Recorder & File Attachment Box -->
+                        <div class="submission-method-box p-3 rounded mb-3" style="background: rgba(27, 94, 32, 0.025); border: 1px dashed var(--primary); border-radius: var(--radius-md) !important;">
+                            <ul class="nav nav-pills nav-fill mb-3 gap-2" id="submissionTypeTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-bold py-2" id="tab-file-upload" data-bs-toggle="pill" data-bs-target="#panel-file-upload" type="button" role="tab" onclick="switchSubmissionTab('file')">
+                                        <i class="fas fa-file-upload me-1"></i> Upload File / Dokumen / Audio
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold py-2 bg-light border text-danger" id="tab-voice-recorder" data-bs-toggle="pill" data-bs-target="#panel-voice-recorder" type="button" role="tab" onclick="switchSubmissionTab('voice')">
+                                        <i class="fas fa-microphone me-1"></i> Rekam Suara 
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="submissionTypeTabContent">
+                                <!-- Panel 1: File Upload -->
+                                <div class="tab-pane fade show active" id="panel-file-upload" role="tabpanel">
+                                    <label class="form-label fw-bold">Upload File Dokumen atau Audio (Opsional)</label>
+                                    <input type="file" class="form-control" name="file" id="assignmentFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.m4a,.wav,.webm,.ogg,.aac,.3gp" onchange="validateFileSize(this, 25)">
+                                    <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle text-primary me-1"></i> Format: PDF, Word, Excel, PPT, MP3, M4A, WAV, WEBM, 3GP. <strong class="text-dark">Maksimal 25 MB</strong>.</small>
+                                </div>
+
+                                <!-- Panel 2: Live Voice Recorder -->
+                                <div class="tab-pane fade" id="panel-voice-recorder" role="tabpanel">
+                                    <div class="text-center py-3 px-3 bg-white rounded border shadow-sm">
+                                        <div class="mb-3">
+                                            <span id="recordingStatusBadge" class="badge bg-secondary px-3 py-2 fs-6 rounded-pill">
+                                                <i class="fas fa-microphone-alt me-1"></i> Perekam Suara Siap
+                                            </span>
+                                            <h3 class="fw-bold my-2 text-dark font-monospace" id="recordingTimer">00:00</h3>
+                                            <p class="text-muted small mb-0">Klik <strong>Mulai Rekam Suara</strong> di bawah untuk merekam jawaban lisan, bacaan, atau penjelasan Anda.</p>
+                                        </div>
+
+                                        <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap mb-3">
+                                            <button type="button" id="startRecordBtn" class="btn btn-danger btn-lg px-4 rounded-pill shadow-sm fw-bold">
+                                                <i class="fas fa-circle me-1"></i> Mulai Rekam Suara
+                                            </button>
+                                            <button type="button" id="stopRecordBtn" class="btn btn-dark btn-lg px-4 rounded-pill shadow-sm fw-bold d-none">
+                                                <i class="fas fa-square me-1"></i> Hentikan Perekaman
+                                            </button>
+                                            <button type="button" id="resetRecordBtn" class="btn btn-outline-secondary rounded-pill px-3 d-none">
+                                                <i class="fas fa-redo me-1"></i> Rekam Ulang
+                                            </button>
+                                        </div>
+
+                                        <!-- Alternate Native Audio Recording Option for Mobile / Devices -->
+                                        <div class="border-top pt-3 mt-3">
+                                            <label class="form-label fw-semibold text-muted small mb-2"><i class="fas fa-mobile-alt me-1"></i> Atau rekam/pilih dari Perangkat / HP:</label>
+                                            <input type="file" class="form-control form-control-sm" accept="audio/*,.mp3,.m4a,.wav,.webm,.3gp" capture="microphone" id="nativeAudioInput" onchange="handleNativeAudioUpload(this)">
+                                        </div>
+
+                                        <!-- Audio Preview Player -->
+                                        <div id="audioPreviewContainer" class="d-none mt-3 p-3 bg-light rounded text-start border">
+                                            <label class="form-label fw-bold small text-dark mb-1"><i class="fas fa-volume-up text-success me-1"></i> Pratinjau Rekaman Suara Anda:</label>
+                                            <audio id="recordedAudioPlayer" controls class="w-100 mt-1"></audio>
+                                            <div class="text-success small fw-bold mt-2"><i class="fas fa-check-circle me-1"></i> Berkas rekaman telah terlampir dan siap dikirim!</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <button class="btn btn-primary btn-lg w-100 mt-3" type="submit">
+
+                        <button class="btn btn-primary btn-lg w-100 mt-3 fw-bold" type="submit">
                             <i class="fas fa-check-circle me-1"></i> Kirim Tugas
                         </button>
                     </form>
@@ -548,7 +625,52 @@
 
 @push('scripts')
 <script>
-function validateFileSize(input, maxMb = 10) {
+function switchSubmissionTab(type) {
+    const tabFile = document.getElementById('tab-file-upload');
+    const tabVoice = document.getElementById('tab-voice-recorder');
+    const panelFile = document.getElementById('panel-file-upload');
+    const panelVoice = document.getElementById('panel-voice-recorder');
+
+    if (type === 'file') {
+        if (tabFile) { tabFile.classList.add('active'); tabFile.classList.remove('bg-light'); }
+        if (tabVoice) { tabVoice.classList.remove('active'); tabVoice.classList.add('bg-light'); }
+        if (panelFile) { panelFile.classList.add('show', 'active'); }
+        if (panelVoice) { panelVoice.classList.remove('show', 'active'); }
+    } else {
+        if (tabVoice) { tabVoice.classList.add('active'); tabVoice.classList.remove('bg-light'); }
+        if (tabFile) { tabFile.classList.remove('active'); tabFile.classList.add('bg-light'); }
+        if (panelVoice) { panelVoice.classList.add('show', 'active'); }
+        if (panelFile) { panelFile.classList.remove('show', 'active'); }
+    }
+}
+
+function handleNativeAudioUpload(input) {
+    if (input.files && input.files[0]) {
+        const mainFileInput = document.getElementById('assignmentFileInput');
+        const container = new DataTransfer();
+        container.items.add(input.files[0]);
+        if (mainFileInput) {
+            mainFileInput.files = container.files;
+        }
+
+        const audioPlayer = document.getElementById('recordedAudioPlayer');
+        const previewContainer = document.getElementById('audioPreviewContainer');
+        const statusBadge = document.getElementById('recordingStatusBadge');
+        
+        if (audioPlayer) {
+            audioPlayer.src = URL.createObjectURL(input.files[0]);
+        }
+        if (previewContainer) {
+            previewContainer.classList.remove('d-none');
+        }
+        if (statusBadge) {
+            statusBadge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill';
+            statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Berkas Suara Terpilih';
+        }
+    }
+}
+
+function validateFileSize(input, maxMb = 25) {
     if (input.files && input.files[0]) {
         const fileSizeMb = (input.files[0].size / (1024 * 1024)).toFixed(2);
         const maxSizeMb = maxMb;
@@ -558,6 +680,132 @@ function validateFileSize(input, maxMb = 10) {
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordingInterval;
+    let recordingSeconds = 0;
+
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const resetBtn = document.getElementById('resetRecordBtn');
+    const statusBadge = document.getElementById('recordingStatusBadge');
+    const timerEl = document.getElementById('recordingTimer');
+    const audioPlayer = document.getElementById('recordedAudioPlayer');
+    const previewContainer = document.getElementById('audioPreviewContainer');
+    const fileInput = document.getElementById('assignmentFileInput');
+
+    if (startBtn) {
+        async function getAudioStream() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                return await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
+            const legacyGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+            if (legacyGetUserMedia) {
+                return new Promise((resolve, reject) => {
+                    legacyGetUserMedia.call(navigator, { audio: true }, resolve, reject);
+                });
+            }
+            throw new Error('MediaDevicesNotSupported');
+        }
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await getAudioStream();
+                audioChunks = [];
+                
+                let mimeType = 'audio/webm';
+                if (typeof MediaRecorder !== 'undefined') {
+                    if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                            mimeType = 'audio/mp4';
+                        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                            mimeType = 'audio/ogg';
+                        } else {
+                            mimeType = '';
+                        }
+                    }
+                }
+                
+                mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPlayer.src = audioUrl;
+                    previewContainer.classList.remove('d-none');
+
+                    const ext = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ? 'm4a' : 'webm';
+                    const file = new File([audioBlob], `rekaman_suara_${Date.now()}.${ext}`, { type: audioBlob.type });
+                    const container = new DataTransfer();
+                    container.items.add(file);
+                    if (fileInput) {
+                        fileInput.files = container.files;
+                    }
+
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+
+                recordingSeconds = 0;
+                timerEl.textContent = '00:00';
+                recordingInterval = setInterval(() => {
+                    recordingSeconds++;
+                    const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+                    const secs = String(recordingSeconds % 60).padStart(2, '0');
+                    timerEl.textContent = `${mins}:${secs}`;
+                }, 1000);
+
+                statusBadge.className = 'badge bg-danger px-3 py-2 fs-6 rounded-pill';
+                statusBadge.innerHTML = '<i class="fas fa-circle me-1 text-white"></i> 🔴 Sedang Merekam...';
+                startBtn.classList.add('d-none');
+                stopBtn.classList.remove('d-none');
+                resetBtn.classList.add('d-none');
+                previewContainer.classList.add('d-none');
+            } catch (err) {
+                console.error('Mikrofon gagal diakses:', err);
+                if (statusBadge) {
+                    statusBadge.className = 'badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill';
+                    statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Rekam/Pilih File Audio di Bawah';
+                }
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                clearInterval(recordingInterval);
+                statusBadge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill';
+                statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> ✅ Rekaman Selesai';
+                stopBtn.classList.add('d-none');
+                startBtn.classList.add('d-none');
+                resetBtn.classList.remove('d-none');
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            clearInterval(recordingInterval);
+            timerEl.textContent = '00:00';
+            statusBadge.className = 'badge bg-secondary px-3 py-2 fs-6 rounded-pill';
+            statusBadge.innerHTML = '<i class="fas fa-microphone-alt me-1"></i> Perekam Suara Siap';
+            previewContainer.classList.add('d-none');
+            startBtn.classList.remove('d-none');
+            resetBtn.classList.add('d-none');
+            audioPlayer.src = '';
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        });
+    }
+});
 </script>
 @endpush
 @endsection

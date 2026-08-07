@@ -37,7 +37,7 @@
                                 <th>Nama Mata Pelajaran</th>
                                 <th>Kode</th>
                                 <th>Jurusan</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center" style="width: 160px; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -67,15 +67,17 @@
                                             {{ $subject->major ?? 'Umum' }}
                                         </span>
                                     </td>
-                                    <td class="text-center">
-                                        <a href="{{ route('admin.subjects.edit', $subject) }}" class="btn btn-sm btn-outline-accent-theme">
-                                            ✏️ Edit
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.subjects.destroy', $subject) }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus mata pelajaran ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Hapus</button>
-                                        </form>
+                                    <td class="text-center" style="white-space: nowrap;">
+                                        <div class="d-inline-flex gap-1 justify-content-center align-items-center flex-nowrap">
+                                            <a href="{{ route('admin.subjects.edit', $subject) }}" class="btn btn-outline-primary-theme rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;">
+                                                ✏️ Edit
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.subjects.destroy', $subject) }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus mata pelajaran ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-outline-danger rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;">🗑️ Hapus</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

@@ -83,6 +83,12 @@
                                                     {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} — {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
                                                 </td>
                                                 <td class="text-center">
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-primary me-1" 
+                                                            title="Edit"
+                                                            onclick="populateSlotEdit({{ $slot->slot_order }}, '{{ $slot->type }}', '{{ addslashes($slot->label) }}', '{{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}', '{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}')">
+                                                        <i class="fas fa-pen"></i>
+                                                    </button>
                                                     <form method="POST" action="{{ route('tatausaha.schedules.time-slots.destroy', $slot) }}" class="d-inline" onsubmit="return confirm('Hapus slot ini? Jadwal terkait juga akan terhapus.');">
                                                         @csrf
                                                         @method('DELETE')
@@ -121,7 +127,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Urutan Slot</label>
-                                <input type="number" name="slot_order" class="form-control form-control-sm" 
+                                <input type="number" name="slot_order" id="slotOrder" class="form-control form-control-sm" 
                                        value="{{ $timeSlots->count() + 1 }}" min="1" required
                                        placeholder="Nomor urut (misal: 1, 2, 3...)">
                                 <div class="form-text">Jika urutan sudah ada, data akan diupdate.</div>
@@ -144,11 +150,11 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold">Mulai</label>
-                                    <input type="time" name="start_time" class="form-control form-control-sm" required>
+                                    <input type="time" name="start_time" id="startTime" class="form-control form-control-sm" required>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold">Selesai</label>
-                                    <input type="time" name="end_time" class="form-control form-control-sm" required>
+                                    <input type="time" name="end_time" id="endTime" class="form-control form-control-sm" required>
                                 </div>
                             </div>
 
@@ -216,6 +222,15 @@
         } else if (!label.value) {
             label.placeholder = 'Misal: Jam ke-1';
         }
+    }
+
+    function populateSlotEdit(order, type, label, start, end) {
+        document.getElementById('slotOrder').value = order;
+        document.getElementById('slotType').value = type;
+        document.getElementById('slotLabel').value = label;
+        document.getElementById('startTime').value = start;
+        document.getElementById('endTime').value = end;
+        document.getElementById('slotLabel').focus();
     }
 </script>
 @endsection

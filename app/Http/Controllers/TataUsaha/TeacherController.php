@@ -13,11 +13,42 @@ use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $teachers = Teacher::with('user')->paginate(20);
+        $query = Teacher::with('user')
+            ->select('teachers.*')
+            ->join('users', 'users.id', '=', 'teachers.user_id');
 
-        return view('tatausaha.teachers.index', compact('teachers'));
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('teachers.nip', 'like', "%{$search}%")
+                    ->orWhere('teachers.phone', 'like', "%{$search}%")
+                    ->orWhere('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%");
+            });
+        }
+
+        $sort = $request->input('sort', 'name_asc');
+        switch ($sort) {
+            case 'name_desc':
+                $query->orderBy('users.name', 'desc');
+                break;
+            case 'latest':
+                $query->orderBy('teachers.created_at', 'desc');
+                break;
+            case 'earliest':
+                $query->orderBy('teachers.created_at', 'asc');
+                break;
+            case 'name_asc':
+            default:
+                $query->orderBy('users.name', 'asc');
+                break;
+        }
+
+        $teachers = $query->paginate(20)->withQueryString();
+
+        return view('tatausaha.teachers.index', compact('teachers', 'sort'));
     }
 
     public function create(): View

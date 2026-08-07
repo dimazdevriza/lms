@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#25671e">
+    <meta name="theme-color" content="#134611">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/logo-192.png">
@@ -15,11 +15,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- TomSelect CSS for beautiful dropdowns -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <!-- Main LMS CSS stylesheet -->
-    <link rel="stylesheet" href="{{ asset('css/lms.css') }}?v={{ filemtime(public_path('css/lms.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/lms.css') }}?v={{ time() }}">
     <!-- KaTeX CSS for rendering math formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     @stack('styles')
@@ -42,14 +42,14 @@
         </div>
     @endif
     <!-- Top Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark flex-nowrap">
+    <nav class="navbar navbar-expand-lg navbar-light flex-nowrap">
         <div class="d-flex align-items-center flex-grow-1">
             <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Menu">
                 <i class="fas fa-bars"></i>
             </button>
             <a class="navbar-brand" href="{{ url('/') }}">
                 {{-- ponytail: school logo replacement --}}
-                <img src="{{ asset('images/logo.jpg') }}" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; object-fit: cover; background: #fff; padding: 2px;">
+                <img src="{{ asset('images/logo.jpg') }}" alt="Logo" style="height: 32px; width: 32px; border-radius: 50%; object-fit: cover; background: #fff; padding: 2px; border: 1px solid rgba(19, 70, 17, 0.15);">
                 <span class="d-none d-sm-inline">LMS SMA 15&nbsp;Padang</span>
                 <span class="d-inline d-sm-none fw-bold ms-1" style="font-size: 0.95rem;">LMS</span>
             </a>
@@ -59,32 +59,33 @@
             @guest
                 <a class="nav-link ms-2" href="{{ route('login') }}">Login</a>
             @else
+
                 @php
                     $unreadNotificationsCount = \App\Models\Notification::where('user_id', auth()->id())
                         ->whereNull('read_at')
                         ->count();
                 @endphp
-                <a href="{{ route('notifications.index') }}" class="btn btn-link text-white position-relative p-1 me-2 me-md-3 shadow-none no-loader" title="Notifikasi" style="text-decoration: none;">
-                    <i class="fas fa-bell" style="font-size: 1.15rem;"></i>
+                <a href="{{ route('notifications.index') }}" class="nav-icon-btn position-relative no-loader" title="Notifikasi">
+                    <i class="fas fa-bell"></i>
                     @if($unreadNotificationsCount > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; padding: 0.25em 0.5em; margin-top: 4px; margin-left: -2px;">
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 0.2em 0.45em; margin-top: 4px; margin-left: -4px;">
                             {{ $unreadNotificationsCount }}
                         </span>
                     @endif
                 </a>
                 {{-- ponytail: dropdown profile menu --}}
                 <div class="dropdown">
-                    <button class="btn btn-link text-white dropdown-toggle d-flex align-items-center gap-2 shadow-none border-0 p-0 text-decoration-none" 
+                    <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center gap-2 shadow-none border-0 p-1 text-decoration-none" 
                             type="button" id="userMenuButton" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-white text-success fw-bold overflow-hidden" 
-                             style="width: 32px; height: 32px; font-size: 0.85rem; font-family: 'Plus Jakarta Sans', sans-serif;">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold overflow-hidden" 
+                             style="width: 34px; height: 34px; font-size: 0.85rem; font-family: 'Plus Jakarta Sans', sans-serif; background: #134611;">
                             @if(auth()->user()->avatar)
                                 <img src="{{ auth()->user()->avatar_url }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
                             @else
                                 {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                             @endif
                         </div>
-                        <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
+                        <span class="d-none d-md-inline fw-semibold text-dark" style="font-size: 0.875rem;">{{ auth()->user()->name }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenuButton" style="border-radius: var(--radius-md);">
                         <li class="px-3 py-2 border-bottom">
@@ -931,6 +932,11 @@
             }
         }
     </script>
+
+    <!-- Chart.js for LMS Curves & Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    @stack('scripts')
 </body>
 </html>
 

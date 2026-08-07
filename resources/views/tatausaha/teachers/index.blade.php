@@ -16,6 +16,30 @@
         </a>
     </div>
 
+    <div class="card mb-3">
+        <div class="card-body">
+            <form action="{{ route('tatausaha.teachers.index') }}" method="GET" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold">Cari Guru</label>
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Nama, email, NIP, atau telepon..." value="{{ request('search') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Urutan</label>
+                    <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="name_asc" @selected(request('sort') == 'name_asc')>Nama (A - Z)</option>
+                        <option value="name_desc" @selected(request('sort') == 'name_desc')>Nama (Z - A)</option>
+                        <option value="latest" @selected(request('sort', 'name_asc') == 'latest')>Akun Terbaru</option>
+                        <option value="earliest" @selected(request('sort', 'name_asc') == 'earliest')>Akun Terlama</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                    <a href="{{ route('tatausaha.teachers.index') }}" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Data Table --}}
     <div class="content-card reveal reveal-delay-1">
         <div class="content-card-header">
@@ -67,7 +91,13 @@
                                     <div class="empty-state-icon">
                                         <i class="fas fa-chalkboard-teacher"></i>
                                     </div>
-                                    <div class="empty-state-text">Belum ada data guru</div>
+                                    <div class="empty-state-text">
+                                        @if(request()->filled('search'))
+                                            Tidak ada data guru ditemukan untuk pencarian "{{ request('search') }}".
+                                        @else
+                                            Belum ada data guru
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
                         </tr>

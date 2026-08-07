@@ -137,11 +137,11 @@
         }
 
         .schedule-table .time-col {
-            background: #f8f8f8;
-            font-weight: 600;
+            background: #f8fafc;
+            font-weight: 700;
             width: 100px;
-            font-size: 8pt;
-            color: #555;
+            font-size: 8.5pt;
+            color: #0f172a;
         }
 
         .schedule-table .break-row td {

@@ -120,12 +120,12 @@ class StudentSubmissionController extends Controller
     {
         $data = $request->validate([
             'answer_text' => ['nullable', 'string'],
-            'file' => ['nullable', 'file', 'max:10240', function ($attribute, $value, $fail) {
+            'file' => ['nullable', 'file', 'max:25600', function ($attribute, $value, $fail) {
                 if ($value) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma'];
                     if (!in_array($ext, $allowed)) {
-                        $fail('Format file harus berupa: pdf, doc, docx, xls, xlsx, ppt, atau pptx.');
+                        $fail('Format file harus berupa dokumen (pdf, doc, docx, xls, ppt) atau rekaman audio (mp3, m4a, wav, webm, ogg, aac, 3gp).');
                     }
                 }
             }],

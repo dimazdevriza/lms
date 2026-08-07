@@ -291,9 +291,7 @@ class ScheduleController extends Controller
             $data
         );
 
-        return redirect()->route('tatausaha.schedules.time-slots', [
-            'academic_year_id' => $data['academic_year_id'],
-        ])->with('success', 'Jam pelajaran berhasil disimpan.');
+        return redirect()->back()->with('success', 'Jam pelajaran berhasil disimpan.');
     }
 
     /**

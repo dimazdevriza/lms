@@ -410,7 +410,7 @@
                             <th>Nama Siswa</th>
                             <th>Waktu Kumpul</th>
                             <th>Jawaban Teks</th>
-                            <th>File PDF</th>
+                            <th>File Lampiran / Audio</th>
                             <th class="text-center">Nilai</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -435,9 +435,19 @@
                                 </td>
                                 <td>
                                     @if($submission->file_path)
-                                        <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm btn-outline-danger" style="border-radius: var(--radius-sm);">
-                                            <i class="fas fa-file-pdf"></i> Lihat PDF
-                                        </a>
+                                        @php
+                                            $subExtension = pathinfo($submission->file_path, PATHINFO_EXTENSION);
+                                            $isAudio = in_array(strtolower($subExtension), ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma']);
+                                        @endphp
+                                        @if($isAudio)
+                                            <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#gradeModal{{ $submission->id }}" style="border-radius: var(--radius-sm);">
+                                                <i class="fas fa-microphone-alt me-1"></i> Rekaman Suara
+                                            </button>
+                                        @else
+                                            <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm btn-outline-danger" style="border-radius: var(--radius-sm);">
+                                                <i class="fas fa-file-pdf"></i> Lihat File
+                                            </a>
+                                        @endif
                                     @else
                                         <span style="color: var(--text-muted);">-</span>
                                     @endif
@@ -508,6 +518,40 @@
                                                              <div class="p-3 bg-light border rounded text-dark" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;">{{ $submission->answer_text }}</div>
                                                          </div>
                                                      @endif
+
+                                                     @if($submission->file_path)
+                                                         @php
+                                                             $subExtension = pathinfo($submission->file_path, PATHINFO_EXTENSION);
+                                                             $isAudio = in_array(strtolower($subExtension), ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma']);
+                                                         @endphp
+                                                         @if($isAudio)
+                                                             <div class="mb-4 p-3 rounded border" style="background: linear-gradient(135deg, rgba(27,94,32,0.06), rgba(67,160,71,0.02)); border-color: rgba(27,94,32,0.2) !important; border-radius: var(--radius-md) !important;">
+                                                                 <div class="d-flex align-items-center justify-content-between mb-2">
+                                                                     <div class="d-flex align-items-center gap-2">
+                                                                         <i class="fas fa-microphone-alt text-success fs-5"></i>
+                                                                         <h6 class="fw-bold mb-0 text-dark">Rekaman Suara Siswa ({{ strtoupper($subExtension) }})</h6>
+                                                                     </div>
+                                                                     <a href="{{ route('submissions.download', $submission) }}" download class="btn btn-sm btn-outline-success">
+                                                                         <i class="fas fa-download me-1"></i> Unduh Audio
+                                                                     </a>
+                                                                 </div>
+                                                                 <audio controls class="w-100 my-2">
+                                                                     <source src="{{ route('submissions.download', $submission) }}">
+                                                                     Browser Anda tidak mendukung pemutaran audio.
+                                                                 </audio>
+                                                             </div>
+                                                         @else
+                                                             <div class="mb-4 p-3 rounded border bg-light d-flex align-items-center justify-content-between">
+                                                                 <div>
+                                                                     <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-file-pdf text-danger me-2"></i> File Lampiran Siswa ({{ strtoupper($subExtension) }})</h6>
+                                                                 </div>
+                                                                 <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm btn-outline-danger">
+                                                                     <i class="fas fa-external-link-alt me-1"></i> Buka / Unduh File
+                                                                 </a>
+                                                             </div>
+                                                         @endif
+                                                     @endif
+
                                                      <form action="{{ route('guru.assignments.grade-submission', $submission) }}" method="POST" class="mb-3">
                                                          @csrf
                                                          <div class="mb-3">

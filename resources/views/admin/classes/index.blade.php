@@ -40,7 +40,7 @@
                             <th>Jurusan</th>
                             <th>Tahun Ajaran</th>
                             <th>Wali Kelas</th>
-                            <th class="text-center">Aksi</th>
+                            <th class="text-center" style="width: 220px; white-space: nowrap;">Aksi</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -73,10 +73,12 @@
                                 <td>
                                     <small class="text-muted">{{ $class->homeroomTeacher?->user?->name ?? '-' }}</small>
                                 </td>
-                                <td class="text-center">
-                                    <a class="btn btn-sm btn-outline-info me-1" href="{{ route('admin.classes.show', $class) }}">🔍 Detail</a>
-                                    <a class="btn btn-sm btn-outline-primary-theme me-1" href="{{ route('admin.classes.edit', $class) }}">✏️ Edit</a>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Hapus kelas ini?')) { document.getElementById('form-{{ $class->id }}').submit(); }" type="button">🗑️ Hapus</button>
+                                <td class="text-center" style="white-space: nowrap;">
+                                    <div class="d-inline-flex gap-1 justify-content-center align-items-center flex-nowrap">
+                                        <a class="btn btn-outline-info rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" href="{{ route('admin.classes.show', $class) }}">🔍 Detail</a>
+                                        <a class="btn btn-outline-primary-theme rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" href="{{ route('admin.classes.edit', $class) }}">✏️ Edit</a>
+                                        <button class="btn btn-outline-danger rounded-2 fw-semibold" style="font-size: 0.725rem; padding: 3px 8px;" onclick="if(confirm('Hapus kelas ini?')) { document.getElementById('form-{{ $class->id }}').submit(); }" type="button">🗑️ Hapus</button>
+                                    </div>
                                     <form id="form-{{ $class->id }}" method="POST" action="{{ route('admin.classes.destroy', $class) }}" style="display: none;">
                                         @csrf
                                         @method('DELETE')

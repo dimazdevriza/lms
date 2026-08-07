@@ -3,10 +3,10 @@
 @tailwind utilities;
 /* Theme Color Variables */
 :root {
-    --color-primary: #25671E;
-    --color-secondary: #48A111;
-    --color-accent: #F2B50B;
-    --color-light: #F7F0F0;
+    --color-primary: #134611;
+    --color-secondary: #3E8914;
+    --color-accent: #96E072;
+    --color-light: #F0FDF4;
 }
 
 /* Base styling with theme colors */
@@ -91,7 +91,7 @@
 
     .dashboard-section-header {
         @apply p-6 border-b-2 font-bold text-lg;
-        color: #25671E;
+        color: #134611;
     }
 
     .activity-item {
@@ -116,14 +116,14 @@
 
     /* Gradient backgrounds */
     .gradient-welcome {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(19, 70, 17, 0.1) 0%, rgba(19, 70, 17, 0.05) 100%);
     }
 
     .gradient-yellow {
-        background: linear-gradient(135deg, rgba(242, 181, 11, 0.1) 0%, rgba(242, 181, 11, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(150, 224, 114, 0.15) 0%, rgba(150, 224, 114, 0.05) 100%);
     }
 
     .gradient-green {
-        background: linear-gradient(135deg, rgba(72, 161, 17, 0.1) 0%, rgba(72, 161, 17, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(62, 137, 20, 0.1) 0%, rgba(62, 137, 20, 0.05) 100%);
     }
 }
