@@ -21,11 +21,18 @@ class NotificationController extends Controller
         return view('notifications.index', compact('notifications'));
     }
 
-    public function markAsRead(Notification $notification): RedirectResponse
+    public function markAsRead(Notification $notification): RedirectResponse|JsonResponse
     {
         abort_unless($notification->user_id == Auth::id(), 403);
 
         $notification->update(['read_at' => now()]);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'url' => $notification->url
+            ]);
+        }
 
         if ($notification->url) {
             return redirect($notification->url);
@@ -34,11 +41,15 @@ class NotificationController extends Controller
         return back()->with('success', 'Notifikasi ditandai sebagai dibaca.');
     }
 
-    public function markAllAsRead(): RedirectResponse
+    public function markAllAsRead(): RedirectResponse|JsonResponse
     {
         Notification::where('user_id', Auth::id())
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
 
         return back()->with('success', 'Semua notifikasi ditandai sebagai dibaca.');
     }

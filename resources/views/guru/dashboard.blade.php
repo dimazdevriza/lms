@@ -8,7 +8,7 @@
         <div class="page-header-banner-inner">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="mb-2">👨‍🏫 Selamat Datang, {{ Auth::user()->name }}</h1>
+                    <h1 class="mb-2"><i class="fas fa-chalkboard-teacher text-warning me-2"></i> Selamat Datang, {{ Auth::user()->name }}</h1>
                     <p class="mb-0">Berikut ringkasan kegiatan mengajar Anda</p>
                 </div>
                 <div class="text-end">
@@ -294,7 +294,7 @@
                             <div class="empty-state-icon">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="empty-state-text">Semua tugas sudah dinilai! 🎉</div>
+                            <div class="empty-state-text"><i class="fas fa-check-circle text-success me-2"></i> Semua tugas sudah dinilai!</div>
                         </div>
                     @else
                         @foreach($recentPendingAssignments as $assignment)

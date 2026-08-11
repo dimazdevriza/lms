@@ -64,15 +64,105 @@
                     $unreadNotificationsCount = \App\Models\Notification::where('user_id', auth()->id())
                         ->whereNull('read_at')
                         ->count();
+                    $headerNotifications = \App\Models\Notification::where('user_id', auth()->id())
+                        ->orderByDesc('created_at')
+                        ->take(8)
+                        ->get();
                 @endphp
-                <a href="{{ route('notifications.index') }}" class="nav-icon-btn position-relative no-loader" title="Notifikasi">
-                    <i class="fas fa-bell"></i>
-                    @if($unreadNotificationsCount > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 0.2em 0.45em; margin-top: 4px; margin-left: -4px;">
+
+                <!-- Notification Dropdown Popup -->
+                <div class="dropdown me-1">
+                    <button class="nav-icon-btn position-relative border-0 no-loader p-0 shadow-none bg-transparent" 
+                            type="button" 
+                            id="notificationDropdown" 
+                            data-bs-toggle="dropdown" 
+                            data-bs-auto-close="outside"
+                            aria-expanded="false" 
+                            title="Notifikasi">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 36px; height: 36px; background: rgba(19, 70, 17, 0.06); border: 1px solid rgba(19, 70, 17, 0.08); color: var(--primary);">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {{ $unreadNotificationsCount > 0 ? '' : 'd-none' }}" style="font-size: 0.6rem; padding: 0.2em 0.45em; margin-top: 4px; margin-left: -6px;">
                             {{ $unreadNotificationsCount }}
                         </span>
-                    @endif
-                </a>
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 notification-popup-menu" 
+                         aria-labelledby="notificationDropdown" 
+                         style="width: 360px; max-width: 92vw; border-radius: 16px; overflow: hidden; margin-top: 10px;">
+                        
+                        <!-- Header Popup -->
+                        <div class="d-flex align-items-center justify-content-between px-3 py-2.5 bg-white border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-bell text-warning"></i>
+                                <span class="fw-bold text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem;">Notifikasi</span>
+                                <span id="notificationHeaderBadge" class="badge bg-danger-subtle text-danger rounded-pill px-2 py-0.5 fw-semibold {{ $unreadNotificationsCount > 0 ? '' : 'd-none' }}" style="font-size: 0.7rem;">
+                                    <span id="notificationUnreadCountText">{{ $unreadNotificationsCount }}</span> baru
+                                </span>
+                            </div>
+                            <button type="button" 
+                                    id="btnMarkAllRead" 
+                                    onclick="markAllNotificationsRead(event)" 
+                                    class="btn btn-link text-decoration-none p-0 text-success fw-semibold border-0 bg-transparent {{ $unreadNotificationsCount > 0 ? '' : 'd-none' }}" 
+                                    style="font-size: 0.78rem;">
+                                <i class="fas fa-check-double me-1"></i> Tandai Dibaca
+                            </button>
+                        </div>
+
+                        <!-- Scrollable Notification List -->
+                        <div id="notificationListBody" class="notification-list-body" style="max-height: 360px; overflow-y: auto;">
+                            @forelse($headerNotifications as $n)
+                                <a href="{{ route('notifications.read', $n) }}" 
+                                   onclick="handleNotificationClick(event, '{{ route('notifications.read', $n) }}', '{{ $n->url ?? '' }}', {{ $n->id }})"
+                                   class="dropdown-item p-3 text-wrap d-flex align-items-start gap-2.5 position-relative border-bottom notification-item-{{ $n->id }}"
+                                   style="{{ is_null($n->read_at) ? 'background-color: rgba(37, 103, 30, 0.04) !important;' : '' }} transition: background-color 0.2s;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0 mt-0.5"
+                                         style="width: 34px; height: 34px; background-color: {{ is_null($n->read_at) ? 'var(--primary)' : '#6c757d' }}; font-size: 0.8rem;">
+                                        @if(str_contains(strtolower($n->title), 'nilai') || str_contains(strtolower($n->title), 'score'))
+                                            <i class="fas fa-star"></i>
+                                        @elseif(str_contains(strtolower($n->title), 'tugas') || str_contains(strtolower($n->title), 'assignment'))
+                                            <i class="fas fa-tasks"></i>
+                                        @elseif(str_contains(strtolower($n->title), 'materi'))
+                                            <i class="fas fa-book"></i>
+                                        @else
+                                            <i class="fas fa-bell"></i>
+                                        @endif
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden" style="line-height: 1.3;">
+                                        <div class="d-flex justify-content-between align-items-baseline gap-1 mb-1">
+                                            <span class="fw-bold text-dark text-truncate d-block" style="font-size: 0.84rem; max-width: 190px;" title="{{ $n->title }}">
+                                                {{ $n->title }}
+                                            </span>
+                                            <small class="text-muted flex-shrink-0" style="font-size: 0.7rem;">
+                                                {{ $n->created_at ? $n->created_at->diffForHumans() : '' }}
+                                            </small>
+                                        </div>
+                                        <p class="text-muted mb-0 small text-truncate-2" style="font-size: 0.78rem; line-height: 1.35;">
+                                            {{ $n->message }}
+                                        </p>
+                                    </div>
+                                    @if(is_null($n->read_at))
+                                        <span class="position-absolute end-0 top-50 translate-middle-y me-2 p-1 bg-success border border-light rounded-circle unread-dot" 
+                                              style="width: 8px; height: 8px;" title="Belum dibaca"></span>
+                                    @endif
+                                </a>
+                            @empty
+                                <div class="py-4 px-3 text-center text-muted empty-notifications-notice">
+                                    <i class="fas fa-bell-slash fa-2x mb-2 text-secondary opacity-50"></i>
+                                    <div class="fw-semibold small">Belum ada notifikasi</div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Pemberitahuan akademik akan muncul di sini</small>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <!-- Footer Link -->
+                        <div class="p-2 bg-light text-center border-top">
+                            <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-link text-success fw-bold text-decoration-none py-1 px-3 w-100" style="font-size: 0.8rem;">
+                                Lihat Semua Notifikasi <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 {{-- ponytail: dropdown profile menu --}}
                 <div class="dropdown">
                     <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center gap-2 shadow-none border-0 p-1 text-decoration-none" 
@@ -340,20 +430,20 @@
                 sidebar.classList.toggle('show');
             });
 
-            // Close sidebar when clicking outside on mobile
+            // Close sidebar when clicking outside on mobile/tablet (<=992px)
             document.addEventListener('click', function(event) {
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 992) {
                     if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
                         sidebar.classList.remove('show');
                     }
                 }
             });
 
-            // Close sidebar on link click (mobile)
+            // Close sidebar on link click (mobile/tablet)
             const sidebarLinks = sidebar.querySelectorAll('a');
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
+                    if (window.innerWidth <= 992) {
                         sidebar.classList.remove('show');
                     }
                 });
@@ -883,32 +973,92 @@
                 });
         }
 
-        // Live notification polling for tab count badge
-        let lastCheck = localStorage.getItem('last_notification_check') || new Date().toISOString();
-        localStorage.setItem('last_notification_check', new Date().toISOString());
+        function markAllNotificationsRead(e) {
+            if (e) e.preventDefault();
+            fetch("{{ route('notifications.read-all') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('notificationBadge');
+                const headerBadge = document.getElementById('notificationHeaderBadge');
+                const btnMarkRead = document.getElementById('btnMarkAllRead');
+                if (badge) badge.classList.add('d-none');
+                if (headerBadge) headerBadge.classList.add('d-none');
+                if (btnMarkRead) btnMarkRead.classList.add('d-none');
 
+                document.querySelectorAll('#notificationListBody .dropdown-item').forEach(el => {
+                    el.style.backgroundColor = 'transparent';
+                    const circle = el.querySelector('.rounded-circle');
+                    if (circle) circle.style.backgroundColor = '#6c757d';
+                    const dot = el.querySelector('.unread-dot');
+                    if (dot) dot.remove();
+                });
+            })
+            .catch(err => console.error('Error marking all as read:', err));
+        }
+
+        function handleNotificationClick(e, readUrl, targetUrl, notificationId) {
+            e.preventDefault();
+            fetch(readUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const dest = (data && data.url) ? data.url : targetUrl;
+                if (dest && dest !== '') {
+                    window.location.href = dest;
+                } else {
+                    const item = document.querySelector('.notification-item-' + notificationId);
+                    if (item) {
+                        item.style.backgroundColor = 'transparent';
+                        const circle = item.querySelector('.rounded-circle');
+                        if (circle) circle.style.backgroundColor = '#6c757d';
+                        const dot = item.querySelector('.unread-dot');
+                        if (dot) dot.remove();
+                    }
+                    pollNotifications();
+                }
+            })
+            .catch(err => {
+                if (targetUrl && targetUrl !== '') {
+                    window.location.href = targetUrl;
+                }
+            });
+        }
+
+        // Live notification polling for popup count & status updates
         function pollNotifications() {
-            fetch(`/notifications/poll?since=${encodeURIComponent(lastCheck)}`)
+            fetch(`/notifications/poll`)
                 .then(res => res.json())
                 .then(data => {
-                    lastCheck = new Date().toISOString();
-                    localStorage.setItem('last_notification_check', lastCheck);
-
-                    const badge = document.querySelector('.navbar .btn-link .badge');
-                    const bellContainer = document.querySelector('.navbar .btn-link');
+                    const badge = document.getElementById('notificationBadge');
+                    const headerBadge = document.getElementById('notificationHeaderBadge');
+                    const countText = document.getElementById('notificationUnreadCountText');
+                    const btnMarkRead = document.getElementById('btnMarkAllRead');
                     
-                    if (badge) {
-                        if (data.unread_count > 0) {
+                    if (data.unread_count > 0) {
+                        if (badge) {
                             badge.textContent = data.unread_count;
-                        } else {
-                            badge.remove();
+                            badge.classList.remove('d-none');
                         }
-                    } else if (data.unread_count > 0 && bellContainer) {
-                        const newBadge = document.createElement('span');
-                        newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
-                        newBadge.style.cssText = 'font-size: 0.65rem; padding: 0.25em 0.5em; margin-top: 4px; margin-left: -2px;';
-                        newBadge.textContent = data.unread_count;
-                        bellContainer.appendChild(newBadge);
+                        if (headerBadge) headerBadge.classList.remove('d-none');
+                        if (countText) countText.textContent = data.unread_count;
+                        if (btnMarkRead) btnMarkRead.classList.remove('d-none');
+                    } else {
+                        if (badge) badge.classList.add('d-none');
+                        if (headerBadge) headerBadge.classList.add('d-none');
+                        if (btnMarkRead) btnMarkRead.classList.add('d-none');
                     }
                 })
                 .catch(err => console.error('Error polling notifications:', err));

@@ -8,7 +8,7 @@
         <div class="page-header-banner-inner">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h1 class="mb-1">🔔 Notifikasi Saya</h1>
+                    <h1 class="mb-1"><i class="fas fa-bell text-warning me-2"></i> Notifikasi Saya</h1>
                     <p class="mb-0">Pemberitahuan tugas baru, nilai, dan info akademik</p>
                 </div>
                 @if($notifications->whereNull('read_at')->count() > 0)

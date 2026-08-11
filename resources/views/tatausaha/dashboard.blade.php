@@ -119,7 +119,7 @@
     <div class="tu-header-banner reveal">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
-                <h1>📋 Dashboard Tata Usaha</h1>
+                <h1><i class="fas fa-clipboard-list me-2" style="color: rgba(255,255,255,0.9);"></i> Dashboard Tata Usaha</h1>
                 <p>Kelola administrasi sekolah dengan mudah dan terorganisir</p>
             </div>
             <div class="header-date">
@@ -222,7 +222,7 @@
                                                     <span class="status-badge status-badge--hadir">{{ $class->students_count }}</span>
                                                 </td>
                                                 <td>
-                                                    <small>{{ $class->homeroomTeacher?->user?->name ?? 'Belum ada' }}</small>
+                                                    <small>{{ optional(optional($class->homeroomTeacher)->user)->name ?? 'Belum ada' }}</small>
                                                 </td>
                                                 <td class="text-center">
                                                     <a href="{{ route('tatausaha.students.index', ['class_id' => $class->id]) }}" class="btn btn-sm btn-link p-0" style="color: var(--secondary);">
@@ -317,15 +317,15 @@
                 </div>
                 <div class="content-card-body">
                     <div class="reminder-item reminder-item--warning">
-                        <strong>📅 UTS Minggu Depan</strong>
+                        <strong><i class="fas fa-calendar-alt me-1 text-warning"></i> UTS Minggu Depan</strong>
                         <p class="mb-0 mt-1 small text-muted">Persiapkan jadwal dan ruang ujian</p>
                     </div>
                     <div class="reminder-item reminder-item--info">
-                        <strong>📝 Input Nilai</strong>
+                        <strong><i class="fas fa-edit me-1 text-primary"></i> Input Nilai</strong>
                         <p class="mb-0 mt-1 small text-muted">Guru diminta untuk melengkapi input nilai</p>
                     </div>
                     <div class="reminder-item reminder-item--success">
-                        <strong>✅ Pembayaran SPP</strong>
+                        <strong><i class="fas fa-check-circle me-1 text-success"></i> Pembayaran SPP</strong>
                         <p class="mb-0 mt-1 small text-muted">Pengingat: Deadline SPP 10 Maret 2026</p>
                     </div>
                 </div>

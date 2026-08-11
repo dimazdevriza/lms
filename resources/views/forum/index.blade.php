@@ -29,7 +29,7 @@
                 </ol>
             </nav>
             <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary) !important;">
-                💬 Forum Diskusi: {{ $subject->name }} ({{ $schoolClass->name }})
+                <i class="fas fa-comments me-2 text-warning"></i> Forum Diskusi: {{ $subject->name }} ({{ $schoolClass->name }})
             </h1>
         </div>
     </div>
@@ -155,7 +155,7 @@
             <div class="card border-0 shadow-sm mb-4 reveal reveal-delay-1" style="border-radius: var(--radius-md) !important;">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-3" style="font-family: 'Plus Jakarta Sans', sans-serif; color: var(--primary) !important;">
-                        📂 Detail Kelas
+                        <i class="fas fa-folder-open me-2 text-primary"></i> Detail Kelas
                     </h5>
                     <div class="d-flex flex-column gap-3">
                         <div>

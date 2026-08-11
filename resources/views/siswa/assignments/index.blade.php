@@ -7,7 +7,7 @@
     <div class="page-header-banner reveal">
         <div class="page-header-banner-inner d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div>
-                <h1 class="mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.6rem;">📋 Daftar Tugas Saya</h1>
+                <h1 class="mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.6rem;"><i class="fas fa-list-check me-2 text-warning"></i> Daftar Tugas Saya</h1>
                 <p class="mb-0 text-white-50" style="font-size: 0.9rem;">Pantau deadline dan kumpulkan tugas tepat waktu</p>
             </div>
         </div>
@@ -15,7 +15,7 @@
 
     @if(!$student)
         <div class="alert alert-warning reveal reveal-delay-1">
-            <strong>⚠️ Perhatian</strong>
+            <strong><i class="fas fa-exclamation-triangle me-1"></i> Perhatian</strong>
             <p class="mb-0 mt-2">Profil siswa belum terdaftar. Silakan minta Tata Usaha membuat data siswa untuk akun ini.</p>
         </div>
     @endif

@@ -15,7 +15,7 @@
                         <li class="breadcrumb-item active" aria-current="page">{{ $subject->name }}</li>
                     </ol>
                 </nav>
-                <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary) !important;">🗓️ Daftar Pertemuan: {{ $subject->name }}</h1>
+                <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary) !important;"><i class="fas fa-calendar-alt me-2 text-success"></i> Daftar Pertemuan: {{ $subject->name }}</h1>
             </div>
         </div>
         <div>

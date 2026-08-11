@@ -66,7 +66,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" style="border-radius: var(--radius-md); overflow: hidden; border: none;">
             <div class="modal-header bg-success text-white py-3">
-                <h5 class="modal-title fw-bold text-white" id="cropModalLabel" style="font-family: 'Plus Jakarta Sans', sans-serif; color: #ffffff !important;">✏️ Edit Foto Profil</h5>
+                <h5 class="modal-title fw-bold text-white" id="cropModalLabel" style="font-family: 'Plus Jakarta Sans', sans-serif; color: #ffffff !important;"><i class="fas fa-user-edit me-2 text-white"></i> Edit Foto Profil</h5>
                 <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">

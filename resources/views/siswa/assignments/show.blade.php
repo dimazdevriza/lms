@@ -18,7 +18,7 @@
             <a href="{{ $backUrl }}" class="btn btn-outline-secondary-theme btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
-            <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $submission ? '📊 Hasil Tugas' : '📝 Kerjakan Tugas' }}</h1>
+            <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">@if($submission)<i class="fas fa-chart-pie text-primary me-2"></i>Hasil Tugas @else<i class="fas fa-edit text-primary me-2"></i>Kerjakan Tugas @endif</h1>
         </div>
 
         <div class="content-card" style="border-top: none;">
@@ -76,7 +76,7 @@
         {{-- Already submitted: show results --}}
         <div class="content-card mb-4 reveal reveal-delay-1">
             <div class="content-card-body text-center py-4">
-                <h5 style="color: var(--primary); font-family: 'Plus Jakarta Sans', sans-serif;">✅ Tugas sudah dikumpulkan</h5>
+                <h5 style="color: var(--primary); font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fas fa-check-circle text-success me-2"></i>Tugas sudah dikumpulkan</h5>
                 <p class="text-muted mb-2">Dikumpulkan pada {{ \Carbon\Carbon::parse($submission->submitted_at)->format('d M Y, H:i') }}</p>
                 @if($submission->score !== null)
                     <div class="d-inline-block rounded-3 p-3 mt-2" style="background: rgba(27, 94, 32, 0.04);">

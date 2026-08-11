@@ -8,7 +8,7 @@
         <div class="page-header-banner-inner">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="mb-1"> Selamat Datang, {{ Auth::user()->name }}</h1>
+                    <h1 class="mb-1"><i class="fas fa-user-graduate me-2 text-warning"></i> Selamat Datang, {{ Auth::user()->name }}</h1>
                     <p>Pantau progres belajar Anda di sini</p>
                 </div>
                 <div class="text-end">

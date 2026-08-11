@@ -6,7 +6,7 @@
     <!-- Header Banner -->
     <div class="page-header-banner reveal">
         <div class="page-header-banner-inner">
-            <h1>📚 Ruang Belajar</h1>
+            <h1><i class="fas fa-graduation-cap text-warning me-2"></i> Ruang Belajar</h1>
             <p>Akses materi dan tugas yang dikelompokkan per pertemuan</p>
         </div>
     </div>
@@ -48,7 +48,7 @@
                     <div class="row">
                         <!-- Materials for this meeting -->
                         <div class="col-md-6 mb-3 mb-md-0">
-                            <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--primary); letter-spacing: 1px;">📚 Materi</h6>
+                            <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--primary); letter-spacing: 1px;"><i class="fas fa-book me-1"></i> Materi</h6>
                             @forelse($meeting->materials as $m)
                                 <div class="d-flex align-items-center p-2 mb-2 bg-white rounded border item-hover-card" 
                                      onclick="window.open('{{ asset('storage/' . $m->file_path) }}', '_blank')">
@@ -67,7 +67,7 @@
 
                         <!-- Assignments for this meeting -->
                         <div class="col-md-6">
-                            <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--accent); letter-spacing: 1px;">📝 Tugas</h6>
+                            <h6 class="text-uppercase small fw-bold mb-3" style="color: var(--accent); letter-spacing: 1px;"><i class="fas fa-edit me-1"></i> Tugas</h6>
                             @forelse($meeting->assignments as $a)
                                 <div class="d-flex align-items-center p-2 mb-2 bg-white rounded border item-hover-card" 
                                      onclick="window.location='{{ route('siswa.assignments.index') }}'">

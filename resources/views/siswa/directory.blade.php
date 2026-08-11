@@ -8,7 +8,7 @@
         <div class="page-header-banner-inner">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h1 class="mb-1">👥 Direktori Kelas</h1>
+                    <h1 class="mb-1"><i class="fas fa-users text-warning me-2"></i> Direktori Kelas</h1>
                     <p class="mb-0">Daftar teman sekelas dan guru pengajar Anda</p>
                 </div>
                 <div class="text-md-end">
@@ -87,7 +87,7 @@
                                 {{ strtoupper(substr($homeroomTeacher->user->name, 0, 2)) }}
                             </div>
                             <div>
-                                <span class="badge bg-warning-subtle text-warning mb-1 fw-bold px-3 py-1 rounded-pill" style="font-size: 0.75rem;">⭐ WALI KELAS</span>
+                                <span class="badge bg-warning-subtle text-warning mb-1 fw-bold px-3 py-1 rounded-pill" style="font-size: 0.75rem;"><i class="fas fa-star text-warning me-1"></i> WALI KELAS</span>
                                 <h5 class="mb-1 text-dark fw-bold" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $homeroomTeacher->user->name }}</h5>
                                 <div class="small text-muted d-flex align-items-center gap-2">
                                     <span><i class="fas fa-id-badge text-warning"></i> NIP: {{ $homeroomTeacher->nip ?? '-' }}</span>

@@ -8,7 +8,7 @@
             <div class="d-flex align-items-center justify-content-between">
                 <div>
                     <span class="badge mb-2">Siswa</span>
-                    <h1 class="h3 mb-2" style="color: #FFFFFF !important; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;">📖 Pilih Mata Pelajaran</h1>
+                    <h1 class="h3 mb-2" style="color: #FFFFFF !important; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;"><i class="fas fa-book-open me-2 text-warning"></i> Pilih Mata Pelajaran</h1>
                     <p class="text-white-50">Pilih mata pelajaran untuk melihat daftar pertemuan, materi, dan tugas Anda</p>
                 </div>
             </div>

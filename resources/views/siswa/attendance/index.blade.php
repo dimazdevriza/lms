@@ -6,7 +6,7 @@
     <!-- Header Banner -->
     <div class="page-header-banner reveal">
         <div class="page-header-banner-inner">
-            <h1>✅ Rekam Kehadiran Saya</h1>
+            <h1><i class="fas fa-calendar-check text-warning me-2"></i> Rekam Kehadiran Saya</h1>
             <p>Pantau catatan kehadiran Anda di setiap kelas</p>
         </div>
     </div>
@@ -100,9 +100,9 @@
                     <table class="table table-hover mb-0">
                         <thead>
                         <tr>
-                            <th>📅 Tanggal</th>
+                            <th><i class="fas fa-calendar me-1"></i> Tanggal</th>
                             <th>Status Kehadiran</th>
-                            <th>📖 Mata Pelajaran</th>
+                            <th><i class="fas fa-book me-1"></i> Mata Pelajaran</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -122,15 +122,15 @@
                                             default => 'status-badge--pdf'
                                         };
                                         $statusIcon = match($r->status) {
-                                            'hadir' => '✓',
-                                            'izin' => '📄',
-                                            'sakit' => '🤒',
-                                            'alpa' => '✗',
-                                            'cabut' => '🏃',
-                                            default => '-'
+                                            'hadir' => '<i class="fas fa-check me-1"></i>',
+                                            'izin' => '<i class="fas fa-file-alt me-1"></i>',
+                                            'sakit' => '<i class="fas fa-notes-medical me-1"></i>',
+                                            'alpa' => '<i class="fas fa-times me-1"></i>',
+                                            'cabut' => '<i class="fas fa-running me-1"></i>',
+                                            default => ''
                                         };
                                     @endphp
-                                    <span class="status-badge {{ $badgeClass }}">{{ $statusIcon }} {{ ucfirst($r->status) }}</span>
+                                    <span class="status-badge {{ $badgeClass }}">{!! $statusIcon !!} {{ ucfirst($r->status) }}</span>
                                 </td>
                                 <td>
                                     <small class="text-muted">{{ $r->attendance?->subject_id ?? '-' }}</small>
