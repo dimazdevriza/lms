@@ -68,16 +68,7 @@
         <!-- Quick Summary Cards -->
         <div class="stats-grid" style="margin-top: 12px;">
             @php
-                $totDaily = $dailyAttendances->count();
-                $hadirDaily = $dailyAttendances->where('status', 'hadir')->count();
                 $presentPct = $totDaily > 0 ? round(($hadirDaily / $totDaily) * 100, 1) : 100;
-                
-                $completedTasks = $submissions->count();
-                $gradedTasks = $submissions->whereNotNull('score')->count();
-                $avgScore = $gradedTasks > 0 ? round($submissions->whereNotNull('score')->avg('score')) : '-';
-                
-                $goodBehaviors = $behaviorRecords->where('type', 'positif')->count();
-                $badBehaviors = $behaviorRecords->where('type', 'negatif')->count();
             @endphp
 
             <div class="stat-card stat-card--attendance reveal reveal-delay-1">
@@ -110,7 +101,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <div class="stat-label">Catatan Wali Kelas</div>
-                        <div class="stat-value stat-value--primary">{{ $behaviorRecords->count() }}</div>
+                        <div class="stat-value stat-value--primary">{{ $totalBehaviors }}</div>
                         <div class="stat-sub">
                             <span class="text-success">{{ $goodBehaviors }} Prestasi</span> &middot;
                             <span class="text-danger">{{ $badBehaviors }} Teguran</span>
@@ -192,6 +183,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="mt-3">
+                                    {{ $dailyAttendances->links('pagination::bootstrap-5') }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -241,6 +235,9 @@
                                             @endforelse
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="mt-3">
+                                    {{ $subjectAttendances->links('pagination::bootstrap-5') }}
                                 </div>
                             </div>
                         </div>
@@ -309,6 +306,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="mt-3">
+                                    {{ $submissions->links('pagination::bootstrap-5') }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -359,6 +359,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="mt-3">
+                                    {{ $grades->links('pagination::bootstrap-5') }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -406,6 +409,9 @@
                                 </div>
                             @endforelse
                         </div>
+                        <div class="mt-4">
+                            {{ $behaviorRecords->links('pagination::bootstrap-5') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -428,5 +434,29 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('sub_page') || urlParams.has('grade_page')) {
+                const gradesTab = document.getElementById('grades-tab');
+                if (gradesTab) {
+                    const tab = new bootstrap.Tab(gradesTab);
+                    tab.show();
+                }
+            } else if (urlParams.has('behavior_page')) {
+                const behaviorTab = document.getElementById('behavior-tab');
+                if (behaviorTab) {
+                    const tab = new bootstrap.Tab(behaviorTab);
+                    tab.show();
+                }
+            } else if (urlParams.has('daily_page') || urlParams.has('subject_page')) {
+                const attendanceTab = document.getElementById('attendance-tab');
+                if (attendanceTab) {
+                    const tab = new bootstrap.Tab(attendanceTab);
+                    tab.show();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

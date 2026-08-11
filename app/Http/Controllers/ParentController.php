@@ -153,41 +153,69 @@ class ParentController extends Controller
 
         $student = Student::with(['user', 'schoolClass.academicYear'])->findOrFail($studentId);
 
-        // Daily Attendance (Wali Kelas)
+        // Daily Attendance summary calculations
+        $totDaily = ClassAttendanceDetail::where('student_id', $studentId)->count();
+        $hadirDaily = ClassAttendanceDetail::where('student_id', $studentId)->where('status', 'hadir')->count();
+
+        // Assignment Submissions summary calculations
+        $completedTasks = AssignmentSubmission::where('student_id', $studentId)->count();
+        $gradedSubmissionsQuery = AssignmentSubmission::where('student_id', $studentId)->whereNotNull('score');
+        $gradedTasks = $gradedSubmissionsQuery->count();
+        $avgScore = $gradedTasks > 0 ? round($gradedSubmissionsQuery->avg('score')) : '-';
+
+        // Behavior Records summary calculations
+        $goodBehaviors = BehaviorRecord::where('student_id', $studentId)->where('type', 'positif')->count();
+        $badBehaviors = BehaviorRecord::where('student_id', $studentId)->where('type', 'negatif')->count();
+        $totalBehaviors = BehaviorRecord::where('student_id', $studentId)->count();
+
+        // Daily Attendance (Wali Kelas) - Paginated 10 items
         $dailyAttendances = ClassAttendanceDetail::where('student_id', $studentId)
             ->join('class_attendances', 'class_attendance_details.class_attendance_id', '=', 'class_attendances.id')
             ->select('class_attendance_details.*')
             ->orderBy('class_attendances.date', 'desc')
             ->with('attendance')
-            ->get();
+            ->paginate(10, ['*'], 'daily_page')
+            ->withQueryString();
 
-        // Subject Attendance
+        // Subject Attendance - Paginated 10 items
         $subjectAttendances = AttendanceDetail::where('student_id', $studentId)
             ->join('attendances', 'attendance_details.attendance_id', '=', 'attendances.id')
             ->select('attendance_details.*')
             ->orderBy('attendances.date', 'desc')
             ->with(['attendance.subject', 'attendance.teacher.user'])
-            ->get();
+            ->paginate(10, ['*'], 'subject_page')
+            ->withQueryString();
 
-        // Grades (Rapor / Input Nilai)
+        // Grades (Rapor / Input Nilai) - Paginated 10 items
         $grades = StudentGrade::where('student_id', $studentId)
             ->with(['subject', 'class'])
             ->latest()
-            ->get();
+            ->paginate(10, ['*'], 'grade_page')
+            ->withQueryString();
 
-        // Assignment Submissions (Tugas & Latihan)
+        // Assignment Submissions (Tugas & Latihan) - Paginated 10 items
         $submissions = AssignmentSubmission::where('student_id', $studentId)
             ->with('assignment.subject')
             ->latest()
-            ->get();
+            ->paginate(10, ['*'], 'sub_page')
+            ->withQueryString();
 
-        // Behavior Records
+        // Behavior Records - Paginated 6 items
         $behaviorRecords = BehaviorRecord::where('student_id', $studentId)
             ->latest()
-            ->get();
+            ->paginate(6, ['*'], 'behavior_page')
+            ->withQueryString();
 
         return view('parent.dashboard', compact(
             'student',
+            'totDaily',
+            'hadirDaily',
+            'completedTasks',
+            'gradedTasks',
+            'avgScore',
+            'goodBehaviors',
+            'badBehaviors',
+            'totalBehaviors',
             'dailyAttendances',
             'subjectAttendances',
             'grades',
