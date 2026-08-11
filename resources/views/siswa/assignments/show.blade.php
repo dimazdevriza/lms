@@ -715,16 +715,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const stream = await getAudioStream();
                 audioChunks = [];
                 
-                let mimeType = 'audio/webm';
+                let mimeType = '';
                 if (typeof MediaRecorder !== 'undefined') {
-                    if (!MediaRecorder.isTypeSupported('audio/webm')) {
-                        if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                            mimeType = 'audio/mp4';
-                        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                            mimeType = 'audio/ogg';
-                        } else {
-                            mimeType = '';
-                        }
+                    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                        mimeType = 'audio/webm;codecs=opus';
+                    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                        mimeType = 'audio/webm';
+                    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                        mimeType = 'audio/mp4';
+                    } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+                        mimeType = 'audio/aac';
+                    } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                        mimeType = 'audio/ogg';
                     }
                 }
                 
@@ -737,12 +739,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    const recordedMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: recordedMime });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     audioPlayer.src = audioUrl;
                     previewContainer.classList.remove('d-none');
 
-                    const ext = (mediaRecorder.mimeType && mediaRecorder.mimeType.includes('mp4')) ? 'm4a' : 'webm';
+                    const isMp4 = recordedMime.includes('mp4') || recordedMime.includes('aac');
+                    const ext = isMp4 ? 'm4a' : 'webm';
                     const file = new File([audioBlob], `rekaman_suara_${Date.now()}.${ext}`, { type: audioBlob.type });
                     const container = new DataTransfer();
                     container.items.add(file);
@@ -772,9 +776,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewContainer.classList.add('d-none');
             } catch (err) {
                 console.error('Mikrofon gagal diakses:', err);
+                let errMsg = 'Gagal mengakses mikrofon.';
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    errMsg = 'Izin mikrofon ditolak oleh browser/sistem. Harap izinkan akses mikrofon di ikon gembok browser Anda.';
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    errMsg = 'Perangkat mikrofon tidak ditemukan.';
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    errMsg = 'Mikrofon sedang digunakan oleh aplikasi lain.';
+                }
+                alert('⚠️ ' + errMsg + '\n\nJika perangkat tidak mendukung perekam langsung, silakan gunakan tombol "Atau rekam/pilih dari Perangkat / HP" di bawah.');
                 if (statusBadge) {
                     statusBadge.className = 'badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill';
-                    statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Rekam/Pilih File Audio di Bawah';
+                    statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Izin Mikrofon Diperlukan';
                 }
             }
         });
