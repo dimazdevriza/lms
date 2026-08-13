@@ -12,7 +12,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/images/logo-192.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/v4-shims.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -184,7 +185,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('profile.edit') }}" style="font-size: 0.9rem;">
-                                <i class="fas fa-user-cog text-muted"></i> Pengaturan Profil
+                                <i class="fas fa-user-gear text-primary opacity-75"></i> Pengaturan Profil
                             </a>
                         </li>
                         <li><hr class="dropdown-divider my-1"></li>
@@ -192,7 +193,7 @@
                             <form method="POST" action="{{ route('logout') }}" class="m-0">
                                 @csrf
                                 <button type="submit" class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger" style="font-size: 0.9rem; border: none; background: none; width: 100%; text-align: left;">
-                                    <i class="fas fa-sign-out-alt"></i> Keluar
+                                    <i class="fas fa-right-from-bracket"></i> Keluar
                                 </button>
                             </form>
                         </li>
