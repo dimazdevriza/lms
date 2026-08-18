@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminStaff;
 use App\Models\User;
 use App\Models\Teacher;
 use App\Models\Student;
@@ -87,6 +88,12 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'nisn' => $data['nisn'] ?? null,
             ]);
+        } elseif (in_array($user->role, ['admin', 'tatausaha'])) {
+            AdminStaff::create([
+                'user_id' => $user->id,
+                'nip' => $data['nip'] ?? null,
+                'position' => $user->role,
+            ]);
         }
 
         return redirect()->route('admin.users.index')
@@ -144,6 +151,19 @@ class UserController extends Controller
                     'nisn' => $nisn,
                 ]);
             }
+        } elseif (in_array($user->role, ['admin', 'tatausaha'])) {
+            if ($user->adminStaff) {
+                $user->adminStaff->update([
+                    'nip' => $nip,
+                    'position' => $user->role,
+                ]);
+            } else {
+                AdminStaff::create([
+                    'user_id' => $user->id,
+                    'nip' => $nip,
+                    'position' => $user->role,
+                ]);
+            }
         }
 
         return redirect()->route('admin.users.index')
@@ -157,6 +177,9 @@ class UserController extends Controller
         }
         if ($user->teacher) {
             $user->teacher->delete();
+        }
+        if ($user->adminStaff) {
+            $user->adminStaff->delete();
         }
         $user->delete();
 

@@ -140,21 +140,27 @@
     <script>
         document.getElementById('roleSelect').addEventListener('change', function() {
             const role = this.value;
-            document.getElementById('nipField').style.display = role === 'guru' ? 'block' : 'none';
-            document.getElementById('nisField').style.display = role === 'siswa' ? 'block' : 'none';
+            document.getElementById('nipField').style.display = (role === 'guru' || role === 'tatausaha' || role === 'admin') ? 'block' : 'none';
+            document.getElementById('nisnField').style.display = role === 'siswa' ? 'block' : 'none';
             
             // Reset values when toggling
-            if (role !== 'guru') document.querySelector('input[name="nip"]').value = '';
-            if (role !== 'siswa') document.querySelector('input[name="nis"]').value = '';
+            if (role !== 'guru' && role !== 'tatausaha' && role !== 'admin') {
+                const nipInput = document.querySelector('input[name="nip"]');
+                if (nipInput) nipInput.value = '';
+            }
+            if (role !== 'siswa') {
+                const nisnInput = document.querySelector('input[name="nisn"]');
+                if (nisnInput) nisnInput.value = '';
+            }
         });
         
         // Show field jika sudah ada nilai sebelumnya (reload form dengan error)
         window.addEventListener('DOMContentLoaded', function() {
             const roleSelect = document.getElementById('roleSelect');
-            if (roleSelect.value === 'guru') {
+            if (['guru', 'tatausaha', 'admin'].includes(roleSelect.value)) {
                 document.getElementById('nipField').style.display = 'block';
             } else if (roleSelect.value === 'siswa') {
-                document.getElementById('nisField').style.display = 'block';
+                document.getElementById('nisnField').style.display = 'block';
             }
         });
     </script>

@@ -45,10 +45,10 @@
                             </select>
                         </div>
 
-                        @if($user->role === 'guru')
+                        @if(in_array($user->role, ['guru', 'tatausaha', 'admin']))
                         <div class="mb-4" id="nipField">
                             <label class="form-label fw-semibold">🆔 NIP (Nomor Induk Pegawai)</label>
-                            <input class="form-control" type="text" name="nip" value="{{ old('nip', $user->teacher?->nip) }}" placeholder="Masukkan NIP guru">
+                            <input class="form-control" type="text" name="nip" value="{{ old('nip', $user->teacher?->nip ?? $user->adminStaff?->nip) }}" placeholder="Masukkan NIP">
                             @error('nip')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror

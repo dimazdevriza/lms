@@ -39,6 +39,7 @@ read_*.py
 # Output file helper
 docx_output.txt
 pdf_output.txt
+proposal_*.txt
 skipsi.txt
 audit.txt
 
