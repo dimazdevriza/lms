@@ -37,7 +37,7 @@ class AssignmentController extends Controller
             $query->where('class_id', $request->class_id);
         }
 
-        $assignments = $query->latest()->paginate(20)->appends($request->query());
+        $assignments = $query->latest()->paginate(10)->appends($request->query());
 
         // Get teacher's classes for filter
         $teacherClasses = SchoolClass::whereHas('assignments', function($q) use ($teacherId) {
@@ -77,7 +77,7 @@ class AssignmentController extends Controller
             });
         }
 
-        $assignments = $query->latest()->paginate(20)->appends($request->query());
+        $assignments = $query->latest()->paginate(10)->appends($request->query());
 
         // Summary stats (filtered by class too if selected)
         $statsQuery = Assignment::where('teacher_id', $teacherId);

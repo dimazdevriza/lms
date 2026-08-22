@@ -165,7 +165,7 @@ class ClassroomController extends Controller
         $students = $class->students()->with('user')->get()
             ->sortBy(fn($s) => strtolower($s->user?->name ?? ''), SORT_NATURAL)
             ->values();
-        $behaviors = $class->behaviorRecords()->with('student.user')->orderByDesc('date')->paginate(15);
+        $behaviors = $class->behaviorRecords()->with('student.user')->orderByDesc('date')->paginate(10);
 
         return view('guru.classroom.behavior.index', compact('class', 'students', 'behaviors'));
     }

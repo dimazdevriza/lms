@@ -46,7 +46,7 @@ class UserController extends Controller
                 break;
         }
 
-        $users = $query->paginate(20)->appends($request->query());
+        $users = $query->paginate(10)->appends($request->query());
 
         return view('admin.users.index', compact('users', 'sort'));
     }

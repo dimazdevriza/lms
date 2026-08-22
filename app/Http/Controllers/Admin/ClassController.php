@@ -19,7 +19,7 @@ class ClassController extends Controller
     {
         $classes = SchoolClass::with(['academicYear', 'homeroomTeacher.user'])
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(10);
 
         return view('admin.classes.index', compact('classes'));
     }

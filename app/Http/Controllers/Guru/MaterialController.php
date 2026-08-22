@@ -119,7 +119,7 @@ class MaterialController extends Controller
             $query->where('class_id', $request->class_id);
         }
 
-        $materials = $query->latest()->paginate(20)->appends($request->query());
+        $materials = $query->latest()->paginate(10)->appends($request->query());
 
         // Get teacher's classes for filter dropdown
         $teacherClasses = SchoolClass::whereHas('materials', function($q) use ($teacherId) {

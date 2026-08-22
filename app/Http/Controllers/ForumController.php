@@ -51,7 +51,7 @@ class ForumController extends Controller
                 'comments.replies.replies.replies.user'
             ])
             ->latest()
-            ->paginate(15);
+            ->paginate(10);
 
         return view('forum.index', compact('schoolClass', 'subject', 'posts'));
     }

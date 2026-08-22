@@ -60,7 +60,7 @@ class StudentController extends Controller
                 break;
         }
 
-        $students = $query->paginate(20)->withQueryString();
+        $students = $query->paginate(10)->withQueryString();
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('tatausaha.students.index', compact('students', 'classes', 'sort'));

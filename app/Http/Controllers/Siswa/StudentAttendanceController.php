@@ -17,7 +17,7 @@ class StudentAttendanceController extends Controller
         $records = AttendanceDetail::with(['attendance'])
             ->where('student_id', $student->id)
             ->latest()
-            ->paginate(30);
+            ->paginate(10);
 
         return view('siswa.attendance.index', compact('records'));
     }

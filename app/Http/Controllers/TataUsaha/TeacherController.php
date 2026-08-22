@@ -46,7 +46,7 @@ class TeacherController extends Controller
                 break;
         }
 
-        $teachers = $query->paginate(20)->withQueryString();
+        $teachers = $query->paginate(10)->withQueryString();
 
         return view('tatausaha.teachers.index', compact('teachers', 'sort'));
     }
