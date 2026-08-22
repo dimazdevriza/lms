@@ -76,7 +76,48 @@ class ClassroomController extends Controller
             ->sortBy(fn($s) => strtolower($s->user?->name ?? ''), SORT_NATURAL)
             ->values();
 
-        return view('guru.classroom.show', compact('class', 'students', 'isHomeroomTeacher'));
+        $studentIds = $students->pluck('id');
+
+        // Akumulasi Kehadiran Kelas (Mata Pelajaran + Harian)
+        $subjectHadirCount = \App\Models\AttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('attendance', fn($q) => $q->where('class_id', $class->id))
+            ->whereIn('status', ['hadir'])->count();
+
+        $subjectTotalCount = \App\Models\AttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('attendance', fn($q) => $q->where('class_id', $class->id))->count();
+
+        $dailyHadirCount = \App\Models\ClassAttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('classAttendance', fn($q) => $q->where('class_id', $class->id))
+            ->where('status', 'hadir')->count();
+
+        $dailyTotalCount = \App\Models\ClassAttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('classAttendance', fn($q) => $q->where('class_id', $class->id))->count();
+
+        $totalHadir = $subjectHadirCount + $dailyHadirCount;
+        $totalPresensi = $subjectTotalCount + $dailyTotalCount;
+        $classAttendanceAvg = $totalPresensi > 0 ? round(($totalHadir / $totalPresensi) * 100, 1) : 100;
+
+        // Akumulasi Nilai Kelas (Tugas All Mapel & Evaluasi/Rapor)
+        $tugasScores = \App\Models\AssignmentSubmission::whereIn('student_id', $studentIds)
+            ->whereNotNull('score')
+            ->whereHas('assignment', fn($q) => $q->where('class_id', $class->id))
+            ->pluck('score');
+
+        $evalScores = \App\Models\StudentGrade::whereIn('student_id', $studentIds)
+            ->where('class_id', $class->id)
+            ->pluck('score');
+
+        $allClassScores = $tugasScores->concat($evalScores);
+        $classGradeAvg = $allClassScores->count() > 0 ? round($allClassScores->avg(), 1) : null;
+
+        // Catatan Perilaku Stats
+        $behaviorCountPositif = \App\Models\BehaviorRecord::where('class_id', $class->id)->where('type', 'positif')->count();
+        $behaviorCountNegatif = \App\Models\BehaviorRecord::where('class_id', $class->id)->where('type', 'negatif')->count();
+
+        return view('guru.classroom.show', compact(
+            'class', 'students', 'isHomeroomTeacher',
+            'classAttendanceAvg', 'classGradeAvg', 'behaviorCountPositif', 'behaviorCountNegatif'
+        ));
     }
 
     // ABSENSI KELAS
@@ -92,7 +133,49 @@ class ClassroomController extends Controller
             ->sortBy(fn($s) => strtolower($s->user?->name ?? ''), SORT_NATURAL)
             ->values();
 
-        return view('guru.classroom.attendance.index', compact('class', 'attendances', 'students'));
+        $studentIds = $students->pluck('id');
+
+        // Presensi per mata pelajaran
+        $subjectAttendanceStats = \App\Models\AttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('attendance', function ($q) use ($class) {
+                $q->where('class_id', $class->id);
+            })
+            ->select('student_id', 'status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('student_id', 'status')
+            ->get();
+
+        // Presensi harian wali kelas
+        $dailyAttendanceStats = \App\Models\ClassAttendanceDetail::whereIn('student_id', $studentIds)
+            ->whereHas('classAttendance', function ($q) use ($class) {
+                $q->where('class_id', $class->id);
+            })
+            ->select('student_id', 'status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('student_id', 'status')
+            ->get();
+
+        $accumulatedAttendance = [];
+        foreach ($students as $student) {
+            $sSubj = $subjectAttendanceStats->where('student_id', $student->id);
+            $sDaily = $dailyAttendanceStats->where('student_id', $student->id);
+
+            $hadir = ($sSubj->whereIn('status', ['hadir'])->sum('count')) + ($sDaily->where('status', 'hadir')->sum('count'));
+            $izin = ($sSubj->where('status', 'izin')->sum('count')) + ($sDaily->where('status', 'izin')->sum('count'));
+            $sakit = ($sSubj->where('status', 'sakit')->sum('count')) + ($sDaily->where('status', 'sakit')->sum('count'));
+            $alpa = ($sSubj->whereIn('status', ['alpa', 'cabut'])->sum('count')) + ($sDaily->whereIn('status', ['alpa', 'cabut'])->sum('count'));
+            $total = $hadir + $izin + $sakit + $alpa;
+            $percentage = $total > 0 ? round(($hadir / $total) * 100, 1) : 100;
+
+            $accumulatedAttendance[$student->id] = [
+                'hadir' => $hadir,
+                'izin' => $izin,
+                'sakit' => $sakit,
+                'alpa' => $alpa,
+                'total' => $total,
+                'percentage' => $percentage,
+            ];
+        }
+
+        return view('guru.classroom.attendance.index', compact('class', 'attendances', 'students', 'accumulatedAttendance'));
     }
 
     public function attendanceCreate(SchoolClass $class): View
@@ -233,7 +316,68 @@ class ClassroomController extends Controller
             ->sortBy(fn($s) => strtolower($s->user?->name ?? ''), SORT_NATURAL)
             ->values();
 
-        return view('guru.classroom.grades.index', compact('class', 'students'));
+        $studentIds = $students->pluck('id');
+
+        // Nilai Tugas dari semua mapel
+        $assignmentSubmissions = \App\Models\AssignmentSubmission::whereIn('student_id', $studentIds)
+            ->whereNotNull('score')
+            ->whereHas('assignment', function ($q) use ($class) {
+                $q->where('class_id', $class->id);
+            })
+            ->with('assignment.subject')
+            ->get();
+
+        // Nilai Evaluasi/Rapor
+        $evalGrades = \App\Models\StudentGrade::whereIn('student_id', $studentIds)
+            ->where('class_id', $class->id)
+            ->with('subject')
+            ->get();
+
+        // Ambil daftar mata pelajaran di kelas ini
+        $subjectIds = $assignmentSubmissions->pluck('assignment.subject_id')
+            ->concat($evalGrades->pluck('subject_id'))
+            ->filter()
+            ->unique();
+
+        $subjects = \App\Models\Subject::whereIn('id', $subjectIds)->orderBy('name')->get();
+        if ($subjects->isEmpty()) {
+            $subjects = \App\Models\Subject::orderBy('name')->get();
+        }
+
+        $accumulatedGrades = [];
+        foreach ($students as $student) {
+            $sSubmissions = $assignmentSubmissions->where('student_id', $student->id);
+            $sEval = $evalGrades->where('student_id', $student->id);
+
+            $tugasAvg = $sSubmissions->count() > 0 ? round($sSubmissions->avg('score'), 1) : null;
+            $evalAvg = $sEval->count() > 0 ? round($sEval->avg('score'), 1) : null;
+
+            $allScores = $sSubmissions->pluck('score')->concat($sEval->pluck('score'));
+            $overallAvg = $allScores->count() > 0 ? round($allScores->avg(), 1) : null;
+
+            $subjectBreakdown = [];
+            foreach ($subjects as $sub) {
+                $subTugas = $sSubmissions->filter(fn($subm) => $subm->assignment?->subject_id == $sub->id)->pluck('score');
+                $subEval = $sEval->where('subject_id', $sub->id)->pluck('score');
+                $subAll = $subTugas->concat($subEval);
+
+                $subjectBreakdown[$sub->id] = [
+                    'subject_name' => $sub->name,
+                    'avg' => $subAll->count() > 0 ? round($subAll->avg(), 1) : null,
+                    'count' => $subAll->count(),
+                ];
+            }
+
+            $accumulatedGrades[$student->id] = [
+                'tugas_avg' => $tugasAvg,
+                'eval_avg' => $evalAvg,
+                'overall_avg' => $overallAvg,
+                'total_evaluations' => $allScores->count(),
+                'subject_breakdown' => $subjectBreakdown,
+            ];
+        }
+
+        return view('guru.classroom.grades.index', compact('class', 'students', 'subjects', 'accumulatedGrades'));
     }
 
     public function gradesInput(SchoolClass $class): View

@@ -18,6 +18,52 @@
             <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary);">Data Siswa Kelas {{ $class->name }}</h1>
             <p class="text-muted mb-0">Total terdaftar: <strong>{{ $students->count() }} siswa</strong></p>
         </div>
+    <!-- Summary Stat Cards -->
+    <div class="row g-3 mb-4 reveal">
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" style="background-color: rgba(27, 94, 32, 0.1); color: var(--primary);">
+                    <i class="fas fa-users fa-lg"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Total Siswa</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ $students->count() }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" style="background-color: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                    <i class="fas fa-user-check fa-lg"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Kehadiran Kelas</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ $classAttendanceAvg }}%</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" style="background-color: rgba(255, 193, 7, 0.15); color: #b26a00;">
+                    <i class="fas fa-chart-line fa-lg"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Rata-Rata Nilai</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ $classGradeAvg ? $classGradeAvg : '—' }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 shadow-sm border border-light d-flex align-items-center gap-3">
+                <div class="p-3 rounded-circle" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                    <i class="fas fa-award fa-lg"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Catatan Perilaku</span>
+                    <h4 class="fw-bold mb-0 text-dark"><span class="text-success">+{{ $behaviorCountPositif ?? 0 }}</span> / <span class="text-danger">-{{ $behaviorCountNegatif ?? 0 }}</span></h4>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if($students->count() > 0)

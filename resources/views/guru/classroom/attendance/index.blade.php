@@ -32,7 +32,83 @@
         </div>
     @endif
 
-    <!-- Daftar Absensi -->
+    <!-- Section 1: Akumulasi Kehadiran Per Siswa (Semua Mapel & Harian) -->
+    <div class="content-card reveal mb-4">
+        <div class="content-card-header bg-white py-3">
+            <div class="content-card-header-icon" style="background-color: rgba(13, 110, 253, 0.08); color: #0d6efd;">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div>
+                <h5 class="content-card-title mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700;">Akumulasi Kehadiran Siswa Perwalian</h5>
+                <small class="text-muted">Rekapitulasi akumulasi gabungan presensi seluruh mata pelajaran & presensi harian</small>
+            </div>
+        </div>
+        <div class="content-card-body p-0">
+            @if(count($students) > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4" style="width: 60px;">No.</th>
+                                <th>👤 Nama Siswa</th>
+                                <th class="text-center">✓ Hadir</th>
+                                <th class="text-center">📋 Izin</th>
+                                <th class="text-center">🏥 Sakit</th>
+                                <th class="text-center">❌ Alpa/Cabut</th>
+                                <th class="text-center" style="width: 220px;">Persentase & Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($students as $idx => $student)
+                                @php
+                                    $acc = $accumulatedAttendance[$student->id] ?? ['hadir' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'total' => 0, 'percentage' => 100];
+                                    $pct = $acc['percentage'];
+                                    $badgeBg = $pct >= 90 ? 'bg-success' : ($pct >= 75 ? 'bg-warning text-dark' : 'bg-danger');
+                                @endphp
+                                <tr>
+                                    <td class="ps-4 text-muted fw-semibold">{{ $idx + 1 }}</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ $student->user->name }}</div>
+                                        <div class="text-muted small">NISN: {{ $student->nisn }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill fw-bold px-2 py-1" style="background-color: rgba(67, 160, 71, 0.12); color: #2E7D32;">
+                                            {{ $acc['hadir'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill fw-bold px-2 py-1" style="background-color: rgba(249, 168, 37, 0.12); color: #B26A00;">
+                                            {{ $acc['izin'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill fw-bold px-2 py-1" style="background-color: rgba(255, 152, 0, 0.12); color: #E65100;">
+                                            {{ $acc['sakit'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill fw-bold px-2 py-1" style="background-color: rgba(198, 40, 40, 0.10); color: #C62828;">
+                                            {{ $acc['alpa'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 8px; border-radius: 4px;">
+                                                <div class="progress-bar {{ $badgeBg }}" role="progressbar" style="width: {{ $pct }}%;" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="fw-bold small {{ $pct >= 90 ? 'text-success' : ($pct >= 75 ? 'text-warning' : 'text-danger') }}">{{ $pct }}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Daftar Absensi Harian -->
     <div class="content-card reveal reveal-delay-1">
         <div class="content-card-header">
             <div class="content-card-header-icon">
