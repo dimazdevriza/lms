@@ -159,13 +159,13 @@ class ClassroomController extends Controller
 
         $studentIds = $students->pluck('id');
 
-        // Presensi per mata pelajaran
-        $subjectAttendanceStats = \App\Models\AttendanceDetail::whereIn('student_id', $studentIds)
+        // Presensi per mata pelajaran (dengan fallback meeting.class_id)
+        $subjectAttendanceRaw = \App\Models\AttendanceDetail::whereIn('student_id', $studentIds)
             ->whereHas('attendance', function ($q) use ($class) {
-                $q->where('class_id', $class->id);
+                $q->where('class_id', $class->id)
+                  ->orWhereHas('meeting', fn($mq) => $mq->where('class_id', $class->id));
             })
-            ->select('student_id', 'status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
-            ->groupBy('student_id', 'status')
+            ->with(['attendance.subject'])
             ->get();
 
         // Presensi harian wali kelas
@@ -179,15 +179,46 @@ class ClassroomController extends Controller
 
         $accumulatedAttendance = [];
         foreach ($students as $student) {
-            $sSubj = $subjectAttendanceStats->where('student_id', $student->id);
+            $sSubjDetails = $subjectAttendanceRaw->where('student_id', $student->id);
             $sDaily = $dailyAttendanceStats->where('student_id', $student->id);
 
-            $hadir = ($sSubj->whereIn('status', ['hadir'])->sum('count')) + ($sDaily->where('status', 'hadir')->sum('count'));
-            $izin = ($sSubj->where('status', 'izin')->sum('count')) + ($sDaily->where('status', 'izin')->sum('count'));
-            $sakit = ($sSubj->where('status', 'sakit')->sum('count')) + ($sDaily->where('status', 'sakit')->sum('count'));
-            $alpa = ($sSubj->whereIn('status', ['alpa', 'cabut'])->sum('count')) + ($sDaily->whereIn('status', ['alpa', 'cabut'])->sum('count'));
+            $subjHadir = $sSubjDetails->whereIn('status', ['hadir'])->count();
+            $subjIzin = $sSubjDetails->where('status', 'izin')->count();
+            $subjSakit = $sSubjDetails->where('status', 'sakit')->count();
+            $subjAlpa = $sSubjDetails->whereIn('status', ['alpa', 'cabut'])->count();
+
+            $dailyHadir = $sDaily->where('status', 'hadir')->sum('count');
+            $dailyIzin = $sDaily->where('status', 'izin')->sum('count');
+            $dailySakit = $sDaily->where('status', 'sakit')->sum('count');
+            $dailyAlpa = $sDaily->whereIn('status', ['alpa', 'cabut'])->sum('count');
+
+            $hadir = $subjHadir + $dailyHadir;
+            $izin = $subjIzin + $dailyIzin;
+            $sakit = $subjSakit + $dailySakit;
+            $alpa = $subjAlpa + $dailyAlpa;
             $total = $hadir + $izin + $sakit + $alpa;
             $percentage = $total > 0 ? round(($hadir / $total) * 100, 1) : 100;
+
+            // Breakdown per mata pelajaran
+            $subjectBreakdown = [];
+            $groupedBySubj = $sSubjDetails->groupBy(fn($item) => $item->attendance?->subject?->name ?? 'Lainnya');
+            foreach ($groupedBySubj as $subjectName => $records) {
+                $subHadir = $records->whereIn('status', ['hadir'])->count();
+                $subIzin = $records->where('status', 'izin')->count();
+                $subSakit = $records->where('status', 'sakit')->count();
+                $subAlpa = $records->whereIn('status', ['alpa', 'cabut'])->count();
+                $subTotal = $records->count();
+                $subPct = $subTotal > 0 ? round(($subHadir / $subTotal) * 100, 1) : 100;
+
+                $subjectBreakdown[$subjectName] = [
+                    'hadir' => $subHadir,
+                    'izin' => $subIzin,
+                    'sakit' => $subSakit,
+                    'alpa' => $subAlpa,
+                    'total' => $subTotal,
+                    'percentage' => $subPct,
+                ];
+            }
 
             $accumulatedAttendance[$student->id] = [
                 'hadir' => $hadir,
@@ -196,6 +227,7 @@ class ClassroomController extends Controller
                 'alpa' => $alpa,
                 'total' => $total,
                 'percentage' => $percentage,
+                'subject_breakdown' => $subjectBreakdown,
             ];
         }
 

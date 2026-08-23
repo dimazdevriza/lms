@@ -49,19 +49,22 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-4" style="width: 60px;">No.</th>
+                                <th class="ps-4" style="width: 50px;">No.</th>
                                 <th>👤 Nama Siswa</th>
                                 <th class="text-center">✓ Hadir</th>
                                 <th class="text-center">📋 Izin</th>
                                 <th class="text-center">🏥 Sakit</th>
-                                <th class="text-center">❌ Alpa/Cabut</th>
-                                <th class="text-center" style="width: 220px;">Persentase & Status</th>
+                                <th class="text-center">❌ Alpa</th>
+                                <th class="text-center" style="width: 180px;">Persentase</th>
+                                <th class="text-center" style="width: 130px;">Rincian Mapel</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($students as $idx => $student)
                                 @php
-                                    $acc = $accumulatedAttendance[$student->id] ?? ['hadir' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'total' => 0, 'percentage' => 100];
+                                    $acc = $accumulatedAttendance[$student->id] ?? [
+                                        'hadir' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'total' => 0, 'percentage' => 100, 'subject_breakdown' => []
+                                    ];
                                     $pct = $acc['percentage'];
                                     $badgeBg = $pct >= 90 ? 'bg-success' : ($pct >= 75 ? 'bg-warning text-dark' : 'bg-danger');
                                 @endphp
@@ -91,12 +94,63 @@
                                             {{ $acc['alpa'] }}
                                         </span>
                                     </td>
-                                    <td class="text-center pe-4">
+                                    <td class="text-center pe-2">
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress flex-grow-1" style="height: 8px; border-radius: 4px;">
                                                 <div class="progress-bar {{ $badgeBg }}" role="progressbar" style="width: {{ $pct }}%;" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                             <span class="fw-bold small {{ $pct >= 90 ? 'text-success' : ($pct >= 75 ? 'text-warning' : 'text-danger') }}">{{ $pct }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAttendanceSubject{{ $student->id }}">
+                                            <i class="fas fa-list-check me-1"></i> Mapel
+                                        </button>
+
+                                        <!-- Modal Rincian Presensi Mapel -->
+                                        <div class="modal fade text-start" id="modalAttendanceSubject{{ $student->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header bg-light">
+                                                        <h6 class="modal-header-title fw-bold mb-0">
+                                                            <i class="fas fa-clipboard-user text-primary me-2"></i> Presensi Per Mata Pelajaran - {{ $student->user->name }}
+                                                        </h6>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body p-0">
+                                                        @if(count($acc['subject_breakdown']) > 0)
+                                                            <div class="table-responsive">
+                                                                <table class="table table-hover align-middle mb-0">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th class="ps-4">Mata Pelajaran</th>
+                                                                            <th class="text-center">✓ Hadir</th>
+                                                                            <th class="text-center">📋 Izin</th>
+                                                                            <th class="text-center">🏥 Sakit</th>
+                                                                            <th class="text-center">❌ Alpa</th>
+                                                                            <th class="text-center pe-4">Kehadiran</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach($acc['subject_breakdown'] as $subjName => $sData)
+                                                                            <tr>
+                                                                                <td class="ps-4 fw-bold text-dark">{{ $subjName }}</td>
+                                                                                <td class="text-center"><span class="badge bg-success-subtle text-success fw-bold px-2 py-1">{{ $sData['hadir'] }}</span></td>
+                                                                                <td class="text-center"><span class="badge bg-warning-subtle text-warning-emphasis fw-bold px-2 py-1">{{ $sData['izin'] }}</span></td>
+                                                                                <td class="text-center"><span class="badge bg-info-subtle text-info fw-bold px-2 py-1">{{ $sData['sakit'] }}</span></td>
+                                                                                <td class="text-center"><span class="badge bg-danger-subtle text-danger fw-bold px-2 py-1">{{ $sData['alpa'] }}</span></td>
+                                                                                <td class="text-center pe-4 fw-bold text-primary">{{ $sData['percentage'] }}%</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        @else
+                                                            <div class="p-4 text-center text-muted">Belum ada catatan presensi mata pelajaran dari guru bidang studi.</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
