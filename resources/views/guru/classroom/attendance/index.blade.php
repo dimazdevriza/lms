@@ -71,7 +71,7 @@
                                 <tr>
                                     <td class="ps-4 text-muted fw-semibold">{{ $idx + 1 }}</td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ $student->user->name }}</div>
+                                        <div class="fw-bold text-dark">{{ $student->user?->name ?? 'Siswa (Tanpa Nama)' }}</div>
                                         <div class="text-muted small">NISN: {{ $student->nisn }}</div>
                                     </td>
                                     <td class="text-center">
@@ -113,7 +113,7 @@
                                                 <div class="modal-content border-0 shadow">
                                                     <div class="modal-header bg-light">
                                                         <h6 class="modal-header-title fw-bold mb-0">
-                                                            <i class="fas fa-clipboard-user text-primary me-2"></i> Presensi Per Mata Pelajaran - {{ $student->user->name }}
+                                                            <i class="fas fa-clipboard-user text-primary me-2"></i> Presensi Per Mata Pelajaran - {{ $student->user?->name ?? 'Siswa (Tanpa Nama)' }}
                                                         </h6>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>

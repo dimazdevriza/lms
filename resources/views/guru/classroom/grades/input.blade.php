@@ -39,7 +39,7 @@
                                             <option value="">-- Pilih Siswa --</option>
                                             @foreach($students as $student)
                                                 <option value="{{ $student->id }}">
-                                                    {{ $student->user->name }} (NISN: {{ $student->nisn }})
+                                                    {{ $student->user?->name ?? 'Siswa (Tanpa Nama)' }} (NISN: {{ $student->nisn }})
                                                 </option>
                                             @endforeach
                                         </select>
@@ -124,7 +124,7 @@
             $subjectsData = $mySubjects->isNotEmpty() ? $mySubjects : \App\Models\Subject::orderBy('name')->get();
         @endphp
         const subjectsData = @json($subjectsData);
-        const studentsData = @json($students->map(fn($s) => ['id' => $s->id, 'name' => $s->user->name, 'nisn' => $s->nisn]));
+        const studentsData = @json($students->map(fn($s) => ['id' => $s->id, 'name' => $s->user?->name ?? 'Siswa (Tanpa Nama)', 'nisn' => $s->nisn]));
 
         document.getElementById('addGradeBtn').addEventListener('click', function() {
             const container = document.getElementById('gradesContainer');

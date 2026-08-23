@@ -85,7 +85,7 @@
                                         <tr>
                                             <td class="fw-semibold text-muted">{{ $index + 1 }}</td>
                                             <td>
-                                                <div class="fw-bold text-dark">{{ $student->user->name }}</div>
+                                                <div class="fw-bold text-dark">{{ $student->user?->name ?? 'Siswa (Tanpa Nama)' }}</div>
                                                 <div class="text-muted small">NISN: {{ $student->nisn }}</div>
                                             </td>
                                             <td>

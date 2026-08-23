@@ -99,10 +99,10 @@
                             <tr>
                                 <td class="ps-4 fw-semibold text-muted">{{ $index + 1 }}</td>
                                 <td>
-                                    <span class="fw-bold text-dark">{{ $detail->student->user?->name }}</span>
+                                    <span class="fw-bold text-dark">{{ $detail->student?->user?->name ?? 'Siswa (Tanpa Nama)' }}</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted">{{ $detail->student->nisn }}</span>
+                                    <span class="text-muted">{{ $detail->student?->nisn ?? '-' }}</span>
                                 </td>
                                 <td class="text-center d-flex justify-content-center">
                                     @php

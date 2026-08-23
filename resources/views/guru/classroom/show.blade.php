@@ -96,7 +96,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="fw-bold text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $student->user->name }}</span>
+                                        <span class="fw-bold text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $student->user?->name ?? 'Siswa (Tanpa Nama)' }}</span>
                                     </td>
                                     <td>
                                         <span class="text-muted" style="font-size: 0.85rem;">{{ $student->phone ?? '-' }}</span>

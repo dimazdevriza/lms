@@ -49,7 +49,7 @@
                                 <div class="flex-grow-1">
                                     <div class="d-flex align-items-center gap-2 mb-2">
                                         <h6 class="behavior-card-title {{ $behavior->type === 'positif' ? 'behavior-card-title--prestasi' : 'behavior-card-title--pelanggaran' }} mb-0">
-                                            {{ $behavior->student->user->name }}
+                                            {{ $behavior->student?->user?->name ?? 'Siswa (Tanpa Nama)' }}
                                         </h6>
                                         <span class="behavior-type-badge {{ $behavior->type === 'positif' ? 'behavior-type-badge--prestasi' : 'behavior-type-badge--pelanggaran' }}">
                                             {{ $behavior->type === 'positif' ? 'Positif' : 'Negatif' }}
