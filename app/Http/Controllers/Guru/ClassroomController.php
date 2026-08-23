@@ -16,13 +16,30 @@ use Illuminate\View\View;
 
 class ClassroomController extends Controller
 {
-    private function getTeacher(): Teacher
+    private function getTeacher(): ?Teacher
     {
-        return Teacher::where('user_id', auth()->id())->firstOrFail();
+        return Teacher::where('user_id', auth()->id())->first();
     }
 
-    private function isTeacherOfClass(Teacher $teacher, SchoolClass $class): bool
+    private function canAccessHomeroom(?Teacher $teacher, SchoolClass $class): bool
     {
+        if (auth()->user()?->role === 'admin' || session()->has('impersonate_original_id')) {
+            return true;
+        }
+
+        return $teacher && $class->homeroom_teacher_id === $teacher->id;
+    }
+
+    private function isTeacherOfClass(?Teacher $teacher, SchoolClass $class): bool
+    {
+        if (auth()->user()?->role === 'admin' || session()->has('impersonate_original_id')) {
+            return true;
+        }
+
+        if (! $teacher) {
+            return false;
+        }
+
         if ($class->homeroom_teacher_id === $teacher->id) {
             return true;
         }
@@ -46,18 +63,25 @@ class ClassroomController extends Controller
     public function index(): View
     {
         $teacher = $this->getTeacher();
-        $classes = $teacher->homeroomClasses()->get();
-        $homeroomClasses = $classes;
 
-        $assignedClassIds = \App\Models\ClassSubjectTeacher::where('teacher_id', $teacher->id)->pluck('class_id');
-        $scheduleClassIds = \App\Models\Schedule::where('teacher_id', $teacher->id)->pluck('class_id');
-        $meetingClassIds = \App\Models\Meeting::where('teacher_id', $teacher->id)->pluck('class_id');
+        if ($teacher) {
+            $homeroomClasses = $teacher->homeroomClasses()->get();
+            $classes = $homeroomClasses;
 
-        $allTaughtClassIds = $assignedClassIds->concat($scheduleClassIds)->concat($meetingClassIds)->unique();
-        $homeroomClassIds = $homeroomClasses->pluck('id');
-        $teachingOnlyClassIds = $allTaughtClassIds->diff($homeroomClassIds);
+            $assignedClassIds = \App\Models\ClassSubjectTeacher::where('teacher_id', $teacher->id)->pluck('class_id');
+            $scheduleClassIds = \App\Models\Schedule::where('teacher_id', $teacher->id)->pluck('class_id');
+            $meetingClassIds = \App\Models\Meeting::where('teacher_id', $teacher->id)->pluck('class_id');
 
-        $teachingClasses = SchoolClass::whereIn('id', $teachingOnlyClassIds)->withCount('students')->orderBy('name')->get();
+            $allTaughtClassIds = $assignedClassIds->concat($scheduleClassIds)->concat($meetingClassIds)->unique();
+            $homeroomClassIds = $homeroomClasses->pluck('id');
+            $teachingOnlyClassIds = $allTaughtClassIds->diff($homeroomClassIds);
+
+            $teachingClasses = SchoolClass::whereIn('id', $teachingOnlyClassIds)->withCount('students')->orderBy('name')->get();
+        } else {
+            $homeroomClasses = SchoolClass::withCount('students')->orderBy('name')->get();
+            $classes = $homeroomClasses;
+            $teachingClasses = collect([]);
+        }
 
         return view('guru.classroom.index', compact('classes', 'homeroomClasses', 'teachingClasses'));
     }
@@ -71,7 +95,7 @@ class ClassroomController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk melihat data siswa kelas ini.');
         }
 
-        $isHomeroomTeacher = ($class->homeroom_teacher_id === $teacher->id);
+        $isHomeroomTeacher = $this->canAccessHomeroom($teacher, $class);
         $students = $class->students()->with('user')->get()
             ->sortBy(fn($s) => strtolower($s->user?->name ?? ''), SORT_NATURAL)
             ->values();
@@ -124,7 +148,7 @@ class ClassroomController extends Controller
     public function attendance(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -181,7 +205,7 @@ class ClassroomController extends Controller
     public function attendanceCreate(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -196,7 +220,7 @@ class ClassroomController extends Controller
     public function attendanceStore(Request $request, SchoolClass $class): RedirectResponse
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -226,7 +250,7 @@ class ClassroomController extends Controller
     public function attendanceShow(SchoolClass $class, ClassAttendance $attendance): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id || $attendance->class_id !== $class->id) {
+        if (! $this->canAccessHomeroom($teacher, $class) || $attendance->class_id !== $class->id) {
             abort(403, 'Unauthorized');
         }
 
@@ -241,7 +265,7 @@ class ClassroomController extends Controller
     public function behavior(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -256,7 +280,7 @@ class ClassroomController extends Controller
     public function behaviorCreate(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -270,7 +294,7 @@ class ClassroomController extends Controller
     public function behaviorStore(Request $request, SchoolClass $class): RedirectResponse
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -294,7 +318,7 @@ class ClassroomController extends Controller
     public function behaviorDestroy(SchoolClass $class, BehaviorRecord $behavior): RedirectResponse
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id || $behavior->class_id !== $class->id) {
+        if (! $this->canAccessHomeroom($teacher, $class) || $behavior->class_id !== $class->id) {
             abort(403, 'Unauthorized');
         }
 
@@ -308,7 +332,7 @@ class ClassroomController extends Controller
     public function grades(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -383,7 +407,7 @@ class ClassroomController extends Controller
     public function gradesInput(SchoolClass $class): View
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
@@ -397,7 +421,7 @@ class ClassroomController extends Controller
     public function gradesStore(Request $request, SchoolClass $class): RedirectResponse
     {
         $teacher = $this->getTeacher();
-        if ($class->homeroom_teacher_id !== $teacher->id) {
+        if (! $this->canAccessHomeroom($teacher, $class)) {
             abort(403, 'Unauthorized');
         }
 
