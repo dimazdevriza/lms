@@ -129,6 +129,9 @@ class StudentSubmissionController extends Controller
                     }
                 }
             }],
+        ], [
+            'file.uploaded' => 'File gagal diunggah ke server. Kemungkinan ukuran file melebihi batas upload PHP server (upload_max_filesize).',
+            'file.max' => 'Ukuran file maksimal adalah 25 MB.',
         ]);
 
         $filePath = null;
