@@ -19,10 +19,29 @@
                     $backUrl = route('guru.assignments.index');
                 }
             @endphp
-            <a href="{{ $backUrl }}" class="btn btn-outline-secondary-theme btn-sm" style="border-radius: var(--radius-sm);">
-                <i class="fas fa-arrow-left me-1"></i> Kembali
-            </a>
-            <h1 class="mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--text-heading);">📋 Detail Tugas & Pengumpulan</h1>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ $backUrl }}" class="btn btn-outline-secondary-theme btn-sm" style="border-radius: var(--radius-sm);">
+                        <i class="fas fa-arrow-left me-1"></i> Kembali
+                    </a>
+                    <h1 class="mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--text-heading);">📋 Detail Tugas & Pengumpulan</h1>
+                </div>
+                
+                @if(auth()->user()->role === 'guru')
+                <div class="d-flex gap-2">
+                    <a href="{{ route('guru.assignments.edit', $assignment) }}" class="btn btn-sm btn-outline-primary" style="border-radius: var(--radius-sm);">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                    <form action="{{ route('guru.assignments.destroy', $assignment) }}" method="POST" onsubmit="return confirm('Peringatan Keras: Menghapus tugas akan menghapus SELURUH data pengumpulan nilai dan file siswa terkait tugas ini! Apakah Anda sangat yakin ingin menghapusnya?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: var(--radius-sm);">
+                            <i class="fas fa-trash me-1"></i> Hapus Tugas
+                        </button>
+                    </form>
+                </div>
+                @endif
+            </div>
         </div>
 
         <div class="content-card" style="background: linear-gradient(135deg, rgba(27,94,32,0.03) 0%, rgba(67,160,71,0.01) 100%);">

@@ -291,6 +291,7 @@
                             @endif
                         </a>
                     </li>
+                    <li><a href="{{ route('siswa.grades.index') }}" class="{{ request()->routeIs('siswa.grades.*') ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> Rekap Nilai</a></li>
                     <li><a href="{{ route('siswa.attendance.index') }}" class="{{ request()->routeIs('siswa.attendance.*') ? 'active' : '' }}"><i class="fas fa-clipboard-check"></i> Riwayat Kehadiran</a></li>
                     <li><a href="{{ route('siswa.directory') }}" class="{{ request()->routeIs('siswa.directory') ? 'active' : '' }}"><i class="fas fa-users"></i> Teman Kelas & Guru</a></li>
                 @endif

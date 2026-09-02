@@ -14,6 +14,7 @@ class ClassSubjectTeacher extends Model
         'subject_id',
         'teacher_id',
         'academic_year_id',
+        'is_mandiri',
     ];
 
     public function schoolClass(): BelongsTo

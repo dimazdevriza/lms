@@ -159,6 +159,51 @@ class AttendanceController extends Controller
         return redirect()->route('guru.attendances.index')
             ->with('success', 'Absensi berhasil disimpan.');
     }
+    public function edit(Attendance $attendance): View
+    {
+        abort_unless($attendance->teacher_id == Teacher::where('user_id', Auth::id())->value('id'), 403);
+        $attendance->load(['schoolClass.students.user', 'subject', 'meeting', 'details']);
+        
+        $classes = SchoolClass::with(['students.user'])->where('id', $attendance->class_id)->get();
+        $subjects = Subject::where('id', $attendance->subject_id)->get();
+        
+        // Buat map status siswa
+        $studentStatuses = [];
+        foreach ($attendance->details as $detail) {
+            $studentStatuses[$detail->student_id] = $detail->status;
+        }
+
+        return view('guru.attendance.edit', compact('attendance', 'classes', 'subjects', 'studentStatuses'));
+    }
+
+    public function update(Request $request, Attendance $attendance): RedirectResponse
+    {
+        abort_unless($attendance->teacher_id == Teacher::where('user_id', Auth::id())->value('id'), 403);
+        
+        $data = $request->validate([
+            'date' => ['required', 'date'],
+            'statuses' => ['nullable', 'array'],
+            'statuses.*' => ['nullable', 'in:hadir,izin,sakit,alpa,cabut'],
+        ]);
+
+        $attendance->update(['date' => $data['date']]);
+
+        $students = Student::where('class_id', $attendance->class_id)->pluck('id');
+        $statuses = $data['statuses'] ?? [];
+
+        foreach ($students as $studentId) {
+            $status = $statuses[$studentId] ?? 'hadir';
+            
+            AttendanceDetail::updateOrCreate(
+                ['attendance_id' => $attendance->id, 'student_id' => $studentId],
+                ['status' => $status]
+            );
+        }
+
+        return redirect()->route('guru.attendances.show', $attendance->id)
+            ->with('success', 'Absensi berhasil diperbarui.');
+    }
+
     public function destroy(Attendance $attendance): RedirectResponse
     {
         abort_unless($attendance->teacher_id == Teacher::where('user_id', Auth::id())->value('id'), 403);

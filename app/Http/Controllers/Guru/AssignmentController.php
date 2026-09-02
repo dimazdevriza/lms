@@ -29,24 +29,34 @@ class AssignmentController extends Controller
         $teacherId = Teacher::where('user_id', Auth::id())->value('id');
         abort_unless($teacherId, 403);
 
-        $query = Assignment::where('teacher_id', $teacherId)
-            ->with(['schoolClass', 'subject', 'meeting', 'submissions']);
+        $teacherClasses = ClassSubjectTeacher::where('teacher_id', $teacherId)
+            ->with(['schoolClass', 'subject'])
+            ->get();
 
-        // Filter by class
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
+        return view('guru.assignments.index', compact('teacherClasses'));
+    }
 
-        $assignments = $query->latest()->paginate(10)->appends($request->query());
+    public function classSubjectAssignments(Request $request, SchoolClass $class, Subject $subject): View
+    {
+        $teacherId = Teacher::where('user_id', Auth::id())->value('id');
+        abort_unless($teacherId, 403);
 
-        // Get teacher's classes for filter
-        $teacherClasses = SchoolClass::whereHas('assignments', function($q) use ($teacherId) {
-            $q->where('teacher_id', $teacherId);
-        })->orderBy('name')->get();
+        // Validasi apakah guru ini mengajar kelas & mapel tersebut
+        $isTeaching = ClassSubjectTeacher::where('teacher_id', $teacherId)
+            ->where('class_id', $class->id)
+            ->where('subject_id', $subject->id)
+            ->exists();
+        abort_unless($isTeaching, 403);
 
-        $selectedClassId = $request->class_id;
+        $assignments = Assignment::where('teacher_id', $teacherId)
+            ->where('class_id', $class->id)
+            ->where('subject_id', $subject->id)
+            ->with(['schoolClass', 'subject', 'meeting', 'submissions'])
+            ->latest()
+            ->paginate(10)
+            ->appends($request->query());
 
-        return view('guru.assignments.index', compact('assignments', 'teacherClasses', 'selectedClassId'));
+        return view('guru.assignments.class-subject', compact('assignments', 'class', 'subject'));
     }
 
     public function grading(Request $request): View
@@ -103,7 +113,7 @@ class AssignmentController extends Controller
         ));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $teacher = Teacher::where('user_id', Auth::id())->first() ?? Teacher::first();
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -129,7 +139,10 @@ class AssignmentController extends Controller
 
         $meetings = $teacher ? Meeting::where('teacher_id', $teacher->id)->orderBy('number')->get() : Meeting::orderBy('number')->get();
 
-        return view('guru.assignments.create', compact('classes', 'subjects', 'meetings'));
+        $selectedClassId = $request->query('class_id');
+        $selectedSubjectId = $request->query('subject_id');
+
+        return view('guru.assignments.create', compact('classes', 'subjects', 'meetings', 'selectedClassId', 'selectedSubjectId'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -142,7 +155,7 @@ class AssignmentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'due_at' => ['nullable', 'date'],
-            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx', 'max:10240'],
+            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp3,mp4,wav,mkv,avi,mov', 'max:51200'],
             // Online questions come as JSON
             'questions_json' => ['nullable', 'string'],
             'quiz_url' => ['nullable', 'url', 'max:255'],
@@ -291,7 +304,7 @@ class AssignmentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'due_at' => ['nullable', 'date'],
-            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx', 'max:10240'],
+            'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp3,mp4,wav,mkv,avi,mov', 'max:51200'],
             'questions_json' => ['nullable', 'string'],
             'quiz_url' => ['nullable', 'url', 'max:255'],
         ]);

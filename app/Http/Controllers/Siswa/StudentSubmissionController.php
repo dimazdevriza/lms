@@ -7,6 +7,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\QuestionAnswer;
 use App\Models\Student;
+use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,10 +30,31 @@ class StudentSubmissionController extends Controller
                         $q->where('is_visible', true);
                     });
             })
+            ->with('subject')
+            ->get();
+
+        // Ambil daftar mata pelajaran unik yang memiliki tugas
+        $subjects = $assignments->pluck('subject')->unique()->filter();
+
+        return view('siswa.assignments.index', compact('subjects', 'student'));
+    }
+
+    public function subjectAssignments(Subject $subject): View
+    {
+        $student = Student::where('user_id', Auth::id())->first();
+
+        $assignments = Assignment::query()
+            ->where('subject_id', $subject->id)
+            ->when($student?->class_id, fn ($q, $classId) => $q->where('class_id', $classId))
+            ->where(function ($query) {
+                $query->whereNull('meeting_id')
+                    ->orWhereHas('meeting', function ($q) {
+                        $q->where('is_visible', true);
+                    });
+            })
             ->latest('due_at')
             ->get();
 
-        // Load existing submissions for this student
         if ($student) {
             $submittedIds = AssignmentSubmission::where('student_id', $student->id)
                 ->pluck('assignment_id')
@@ -41,7 +63,7 @@ class StudentSubmissionController extends Controller
             $submittedIds = [];
         }
 
-        return view('siswa.assignments.index', compact('assignments', 'student', 'submittedIds'));
+        return view('siswa.assignments.subject', compact('assignments', 'student', 'submittedIds', 'subject'));
     }
 
     /**
@@ -120,12 +142,12 @@ class StudentSubmissionController extends Controller
     {
         $data = $request->validate([
             'answer_text' => ['nullable', 'string'],
-            'file' => ['nullable', 'file', 'max:25600', function ($attribute, $value, $fail) {
+            'file' => ['nullable', 'file', 'max:51200', function ($attribute, $value, $fail) {
                 if ($value) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma'];
+                    $allowed = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma', 'mp4', 'avi', 'mkv', 'mov'];
                     if (!in_array($ext, $allowed)) {
-                        $fail('Format file harus berupa dokumen (pdf, doc, docx, xls, ppt) atau rekaman audio (mp3, m4a, wav, webm, ogg, aac, 3gp).');
+                        $fail('Format file harus berupa dokumen, audio, atau video (maks. 50MB). Ekstensi yang didukung: pdf, docx, xlsx, pptx, mp3, mp4, wav, mkv, avi, dll.');
                     }
                 }
             }],
@@ -361,5 +383,18 @@ class StudentSubmissionController extends Controller
         $submission->forceDelete();
 
         return back()->with('success', 'Pengiriman tugas berhasil dibatalkan.');
+    }
+
+    public function grades(Request $request): View
+    {
+        $student = Student::where('user_id', Auth::id())->with('schoolClass')->first();
+        abort_unless($student, 403);
+
+        $submissions = AssignmentSubmission::where('student_id', $student->id)
+            ->with(['assignment.subject', 'assignment.teacher.user'])
+            ->latest('submitted_at')
+            ->get();
+
+        return view('siswa.grades.index', compact('submissions', 'student'));
     }
 }

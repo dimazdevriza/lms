@@ -84,7 +84,7 @@
                                 <select class="form-select" name="class_id" id="class_id" required>
                                     <option value="">-- Pilih Kelas --</option>
                                     @foreach($classes as $class)
-                                        <option value="{{ $class->id }}" @selected(old('class_id') == $class->id)>{{ $class->name }}</option>
+                                        <option value="{{ $class->id }}" @selected(old('class_id', $selectedClassId) == $class->id)>{{ $class->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('class_id')
@@ -99,7 +99,7 @@
                                         <option value="">-- Pilih Mata Pelajaran --</option>
                                     @endif
                                     @foreach($subjects as $subject)
-                                        <option value="{{ $subject->id }}" @selected(old('subject_id') == $subject->id || $subjects->count() == 1)>{{ $subject->name }}</option>
+                                        <option value="{{ $subject->id }}" @selected(old('subject_id', $selectedSubjectId) == $subject->id || $subjects->count() == 1)>{{ $subject->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('subject_id')

@@ -9,9 +9,14 @@
             <h1 class="h2 mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;">📅 Pertemuan Kelas</h1>
             <p class="mb-0 text-white-50">Pilih kelas dan mata pelajaran untuk melihat atau membuat pertemuan</p>
         </div>
-        <a class="btn btn-light px-4 py-2 shadow-sm d-flex align-items-center gap-2" style="border-radius: 12px; font-weight: 600; color: var(--primary);" href="{{ route('guru.meetings.create') }}">
-            <i class="fas fa-plus"></i> Buat Pertemuan Baru
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-light px-3 py-2 shadow-sm d-flex align-items-center gap-2" style="border-radius: 12px; font-weight: 600;" href="{{ route('guru.meetings.mandiri.create') }}" title="Pilih mapel & kelas sendiri tanpa melalui TU">
+                <i class="fas fa-chalkboard-user"></i> Tambah Kelas Mandiri
+            </a>
+            <a class="btn btn-light px-3 py-2 shadow-sm d-flex align-items-center gap-2" style="border-radius: 12px; font-weight: 600; color: var(--primary);" href="{{ route('guru.meetings.create') }}">
+                <i class="fas fa-plus"></i> Buat Pertemuan Baru
+            </a>
+        </div>
     </div>
 
     @if($meetingGroups->isEmpty())
@@ -59,9 +64,16 @@
                                                     <div class="p-2 rounded-circle me-3" style="background-color: {{ $major == 'IPA' ? 'rgba(27, 94, 32, 0.06)' : ($major == 'IPS' ? 'rgba(249, 168, 37, 0.06)' : 'rgba(67, 160, 71, 0.06)') }}; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
                                                         <i class="fas fa-users-viewfinder {{ $major == 'IPA' ? 'text-primary' : ($major == 'IPS' ? 'text-warning' : 'text-success') }} small"></i>
                                                     </div>
-                                                    <h6 class="mb-0 fw-bold text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $group->schoolClass?->name ?? 'Tanpa Kelas' }}</h6>
+                                                    <div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <h6 class="mb-0 fw-bold text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $group->schoolClass?->name ?? 'Tanpa Kelas' }}</h6>
+                                                            @if($group->is_mandiri)
+                                                                <span class="badge bg-info text-white" style="font-size: 0.6rem; padding: 0.2rem 0.4rem; border-radius: 4px;">Mandiri</span>
+                                                            @endif
+                                                        </div>
+                                                        <small class="text-muted" style="font-size: 0.75rem;">{{ $group->total_meetings }} Pertemuan</small>
+                                                    </div>
                                                 </div>
-                                                <span class="badge bg-light text-muted small border rounded-pill px-2 py-1" style="font-size: 0.7rem;">{{ $group->total_meetings }} Sesi</span>
                                             </div>
                                             
                                             <div class="d-flex gap-2 mt-4 pt-3 border-top" style="border-color: rgba(37, 103, 30, 0.04) !important;">
@@ -71,6 +83,15 @@
                                                 <a href="{{ route('guru.meetings.class-meetings.create', ['classSlug' => $group->schoolClass->slug, 'subjectSlug' => $group->subject->slug]) }}" class="btn btn-sm btn-outline-success rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-color: rgba(37, 103, 30, 0.15); color: var(--primary);" title="Tambah Sesi" onclick="event.stopPropagation(); text-decoration: none;">
                                                     <i class="fas fa-plus small"></i>
                                                 </a>
+                                                @if($group->is_mandiri)
+                                                <form action="{{ route('guru.meetings.mandiri.destroy', $group->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kelas mandiri ini? Jika ada materi atau pertemuan di dalamnya, maka Anda tidak bisa mengaksesnya lagi dari sini.');" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;" title="Hapus Kelas Mandiri" onclick="event.stopPropagation();">
+                                                        <i class="fas fa-trash small"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

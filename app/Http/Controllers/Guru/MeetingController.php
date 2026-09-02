@@ -116,7 +116,7 @@ class MeetingController extends Controller
         $query = Meeting::where('class_id', $currentClass->id)
             ->where('subject_id', $currentSubject->id)
             ->with(['schoolClass', 'subject'])
-            ->orderBy('number', 'asc');
+            ->orderBy('number', 'desc');
 
         if (Auth::user()->role !== 'admin' && $teacherId) {
             $query->where('teacher_id', $teacherId);

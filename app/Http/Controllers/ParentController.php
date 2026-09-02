@@ -15,22 +15,32 @@ use Illuminate\Support\Str;
 class ParentController extends Controller
 {
     /**
-     * Durasi timeout sesi orang tua (dalam menit).
-     * 180 hari = 180 * 24 * 60 = 259200 menit
+     * Nama cookie persisten untuk mengingat sesi login orang tua di perangkat/browser.
      */
-    private const SESSION_TIMEOUT_MINUTES = 259200;
+    public const COOKIE_NAME = 'parent_access_token';
 
-    public function index()
+    /**
+     * Durasi masa aktif cookie (dalam menit).
+     * 1 tahun = 365 * 24 * 60 = 525600 menit (berlaku sepanjang tahun ajaran).
+     */
+    public const COOKIE_LIFETIME_MINUTES = 525600;
+
+    public function index(Request $request)
     {
-        // If already logged in as parent, redirect to dashboard
-        if (session()->has('parent_student_id')) {
-            // Check session expiry
-            if ($this->isSessionExpired()) {
-                $this->clearParentSession();
-                return view('parent.index')->withErrors(['parent_code' => 'Sesi Anda telah berakhir. Silakan masukkan kode akses kembali.']);
-            }
+        // Cek apakah orang tua sudah pernah login dan kodenya masih berlaku
+        $student = $this->resolveAuthenticatedStudent($request);
+        if ($student) {
             return redirect()->route('parent.dashboard');
         }
+
+        // Jika terdapat cookie lama tetapi kodenya sudah berubah (misal tahun ajaran baru / kode di-regenerate)
+        if ($request->hasCookie(self::COOKIE_NAME)) {
+            $this->clearParentSession();
+            return view('parent.index')->withErrors([
+                'parent_code' => 'Kode akses orang tua telah diperbarui (tahun ajaran baru). Silakan masukkan kode akses terbaru dari pihak sekolah.'
+            ]);
+        }
+
         return view('parent.index');
     }
 
@@ -63,10 +73,7 @@ class ParentController extends Controller
             'endpoint' => 'access',
         ]);
 
-        session([
-            'parent_student_id' => $student->id,
-            'parent_last_activity' => now()->timestamp,
-        ]);
+        $this->setParentAuth($student);
 
         return redirect()->route('parent.dashboard')->with('success', 'Berhasil masuk ke dashboard pemantauan orang tua.');
     }
@@ -126,32 +133,26 @@ class ParentController extends Controller
             'endpoint' => 'view.confirm',
         ]);
 
-        session([
-            'parent_student_id' => $student->id,
-            'parent_last_activity' => now()->timestamp,
-        ]);
+        $this->setParentAuth($student);
 
         return redirect()->route('parent.dashboard');
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $studentId = session('parent_student_id');
-        
-        if (!$studentId) {
-            return redirect()->route('parent.index')->withErrors(['parent_code' => 'Silakan masukkan kode akses terlebih dahulu.']);
-        }
+        $student = $this->resolveAuthenticatedStudent($request);
 
-        // Check session expiry
-        if ($this->isSessionExpired()) {
+        if (!$student) {
+            $msg = $request->hasCookie(self::COOKIE_NAME)
+                ? 'Kode akses orang tua telah diperbarui (tahun ajaran baru). Silakan masukkan kode akses terbaru.'
+                : 'Silakan masukkan kode akses terlebih dahulu.';
+
             $this->clearParentSession();
-            return redirect()->route('parent.index')->withErrors(['parent_code' => 'Sesi Anda telah berakhir (tidak aktif selama ' . self::SESSION_TIMEOUT_MINUTES . ' menit). Silakan masukkan kode akses kembali.']);
+            return redirect()->route('parent.index')->withErrors(['parent_code' => $msg]);
         }
 
-        // Update last activity timestamp
-        session(['parent_last_activity' => now()->timestamp]);
-
-        $student = Student::with(['user', 'schoolClass.academicYear'])->findOrFail($studentId);
+        $studentId = $student->id;
+        $student->load(['user', 'schoolClass.academicYear']);
 
         // Daily Attendance summary calculations
         $totDaily = ClassAttendanceDetail::where('student_id', $studentId)->count();
@@ -231,15 +232,17 @@ class ParentController extends Controller
     }
 
     /**
-     * Regenerate parent access code for a student.
-     * Only accessible by authenticated users (guru/tatausaha).
+     * Regenerate parent access code for a single student.
+     * Only accessible by authenticated users (guru/tatausaha/admin).
      */
     public function regenerateCode(Student $student)
     {
+        $user = auth()->user();
+        abort_unless($user && in_array($user->role, ['admin', 'guru', 'tatausaha'], true), 403);
+
         $oldCode = $student->parent_code;
 
         do {
-            // ponytail: 6 random alphanumeric characters (no prefix)
             $code = strtoupper(Str::random(6));
         } while (Student::where('parent_code', $code)->exists());
 
@@ -252,7 +255,37 @@ class ParentController extends Controller
             'by_user' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Kode akses orang tua berhasil diperbarui.');
+        return back()->with('success', 'Kode akses orang tua berhasil diperbarui. Akses orang tua lama otomatis direset dan memerlukan kode baru ini.');
+    }
+
+    /**
+     * Regenerate parent access code for ALL students (misal saat Tahun Ajaran Baru).
+     * Only accessible by admin / tatausaha.
+     */
+    public function regenerateAllCodes(Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user && in_array($user->role, ['admin', 'tatausaha'], true), 403);
+
+        $count = 0;
+        Student::chunk(100, function ($students) use (&$count) {
+            foreach ($students as $student) {
+                do {
+                    $code = strtoupper(Str::random(6));
+                } while (Student::where('parent_code', $code)->exists());
+
+                $student->update(['parent_code' => $code]);
+                $count++;
+            }
+        });
+
+        Log::info('Parent portal: all codes regenerated for new academic year', [
+            'total_updated' => $count,
+            'by_user' => $user->id,
+            'by_role' => $user->role,
+        ]);
+
+        return back()->with('success', "Berhasil memperbarui kode akses orang tua untuk {$count} siswa (Tahun Ajaran Baru). Seluruh sesi akses sebelumnya otomatis direset.");
     }
 
     /**
@@ -280,26 +313,84 @@ class ParentController extends Controller
             'code' => $student->parent_code,
         ]);
     }
-    /**
-     * Check if parent session has expired due to inactivity.
-     */
-    private function isSessionExpired(): bool
-    {
-        $lastActivity = session('parent_last_activity');
-        if (!$lastActivity) {
-            return true;
-        }
 
-        $timeoutSeconds = self::SESSION_TIMEOUT_MINUTES * 60;
-        return (now()->timestamp - $lastActivity) > $timeoutSeconds;
+    /**
+     * Set session and persistent cookie on parent device.
+     */
+    private function setParentAuth(Student $student): void
+    {
+        $token = $this->makeCodeToken($student);
+
+        session([
+            'parent_student_id' => $student->id,
+            'parent_code_hash' => $token,
+            'parent_last_activity' => now()->timestamp,
+        ]);
+
+        cookie()->queue(
+            cookie()->make(
+                self::COOKIE_NAME,
+                $student->id . '|' . $token,
+                self::COOKIE_LIFETIME_MINUTES,
+                null,
+                null,
+                false,
+                true // HTTP-Only
+            )
+        );
     }
 
     /**
-     * Clear all parent-related session data.
+     * Resolve authenticated student from session or persistent device cookie.
+     * If the student's code has changed in the database, this returns null and invalidates the session/cookie.
+     */
+    private function resolveAuthenticatedStudent(Request $request): ?Student
+    {
+        // 1. Periksa Session aktif
+        if (session()->has('parent_student_id') && session()->has('parent_code_hash')) {
+            $student = Student::find(session('parent_student_id'));
+            if ($student && !empty($student->parent_code) && hash_equals($this->makeCodeToken($student), (string) session('parent_code_hash'))) {
+                session(['parent_last_activity' => now()->timestamp]);
+                return $student;
+            }
+            // Kode di database telah berubah atau siswa tidak ditemukan
+            $this->clearParentSession();
+        }
+
+        // 2. Periksa Persistent Device Cookie jika session kosong/baru
+        $cookieVal = $request->cookie(self::COOKIE_NAME);
+        if ($cookieVal && is_string($cookieVal) && str_contains($cookieVal, '|')) {
+            [$studentId, $cookieHash] = explode('|', $cookieVal, 2);
+            $student = Student::find($studentId);
+
+            if ($student && !empty($student->parent_code) && hash_equals($this->makeCodeToken($student), (string) $cookieHash)) {
+                $this->setParentAuth($student);
+                return $student;
+            }
+
+            // Kode di database telah diubah (misal Tahun Ajaran Baru)
+            $this->clearParentSession();
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate secure HMAC token tied to student ID and parent code.
+     */
+    private function makeCodeToken(Student $student): string
+    {
+        $secret = config('app.key') ?: 'lms_secret_key';
+        return hash_hmac('sha256', $student->id . ':' . ($student->parent_code ?? ''), $secret);
+    }
+
+    /**
+     * Clear all parent-related session and cookie data.
      */
     private function clearParentSession(): void
     {
-        session()->forget(['parent_student_id', 'parent_last_activity']);
+        session()->forget(['parent_student_id', 'parent_code_hash', 'parent_last_activity']);
+        cookie()->queue(cookie()->forget(self::COOKIE_NAME));
     }
 
     private function codeHash(string $code): string

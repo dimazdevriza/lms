@@ -5,11 +5,19 @@
 @section('content')
     @php
         $isDeadlinePassed = $assignment->due_at && \Carbon\Carbon::parse($assignment->due_at)->isPast();
-        $backUrl = $assignment->meeting_id 
-            ? route('siswa.meetings.show', $assignment->meeting_id) 
-            : ($assignment->subject_id 
-                ? route('siswa.subjects.show', $assignment->subject_id) 
-                : route('siswa.assignments.index'));
+        $isFromAssignments = request()->query('from') === 'assignments';
+
+        if ($isFromAssignments) {
+            $backUrl = $assignment->subject_id 
+                ? route('siswa.assignments.subject', $assignment->subject_id)
+                : route('siswa.assignments.index');
+        } else {
+            $backUrl = $assignment->meeting_id 
+                ? route('siswa.meetings.show', $assignment->meeting_id) 
+                : ($assignment->subject_id 
+                    ? route('siswa.subjects.show', $assignment->subject_id) 
+                    : route('siswa.assignments.index'));
+        }
     @endphp
 
     <!-- Header -->

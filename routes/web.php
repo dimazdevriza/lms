@@ -10,6 +10,7 @@ use App\Http\Controllers\Guru\AttendanceController;
 use App\Http\Controllers\Guru\ClassroomController;
 use App\Http\Controllers\Guru\MaterialController;
 use App\Http\Controllers\Guru\MeetingController;
+use App\Http\Controllers\Guru\TeachingAssignmentController as GuruTeachingAssignmentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Siswa\StudentAttendanceController;
@@ -132,12 +133,19 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:guru,admin')->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [MaterialController::class, 'dashboard'])->name('dashboard');
         Route::resource('materials', MaterialController::class);
+        
+        // Kelas Mandiri (Ad-hoc)
+        Route::get('meetings/mandiri/create', [GuruTeachingAssignmentController::class, 'createMandiri'])->name('meetings.mandiri.create');
+        Route::post('meetings/mandiri', [GuruTeachingAssignmentController::class, 'storeMandiri'])->name('meetings.mandiri.store');
+        Route::delete('meetings/mandiri/{id}', [GuruTeachingAssignmentController::class, 'destroyMandiri'])->name('meetings.mandiri.destroy');
+        
         Route::resource('meetings', MeetingController::class);
         Route::get('meetings/class/{classSlug}/{subjectSlug}', [MeetingController::class, 'classMeetingsIndex'])->name('meetings.class-meetings');
         Route::get('meetings/class/{classSlug}/{subjectSlug}/create', [MeetingController::class, 'classMeetingsCreate'])->name('meetings.class-meetings.create');
         Route::post('meetings/{meeting}/video-link', [MeetingController::class, 'updateVideoLink'])->name('meetings.updateVideoLink');
         Route::post('meetings/{meeting}/toggle-visibility', [MeetingController::class, 'toggleVisibility'])->name('meetings.toggleVisibility');
         Route::get('assignments/grading', [AssignmentController::class, 'grading'])->name('assignments.grading');
+        Route::get('assignments/class/{class}/subject/{subject}', [AssignmentController::class, 'classSubjectAssignments'])->name('assignments.class-subject');
         Route::resource('assignments', AssignmentController::class);
         Route::post('assignments/answers/{answer}/grade', [AssignmentController::class, 'gradeQuestion'])->name('assignments.grade-question');
         Route::post('assignments/submissions/{submission}/grade', [AssignmentController::class, 'gradeSubmission'])->name('assignments.grade-submission');
@@ -173,13 +181,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
         Route::get('/directory', [StudentDashboardController::class, 'directory'])->name('directory');
         
-        // Flow Baru: Mapel -> Pertemuan -> Detail
+        // Flow Baru: Mapel -> Guru -> Pertemuan -> Detail
         Route::get('/subjects', [StudentMaterialController::class, 'subjects'])->name('subjects.index');
-        Route::get('/subjects/{subject}', [StudentMaterialController::class, 'subjectMeetings'])->name('subjects.show');
+        Route::get('/subjects/{subject}', [StudentMaterialController::class, 'subjectTeachers'])->name('subjects.show');
+        Route::get('/subjects/{subject}/teacher/{teacher}', [StudentMaterialController::class, 'teacherMeetings'])->name('subjects.teacher.meetings');
         Route::get('/meetings/{meeting}', [StudentMaterialController::class, 'meetingDetail'])->name('meetings.show');
         Route::get('/materials/{material}', [StudentMaterialController::class, 'show'])->name('materials.show');
         
         Route::get('/assignments', [StudentSubmissionController::class, 'index'])->name('assignments.index');
+        Route::get('/assignments/subject/{subject}', [StudentSubmissionController::class, 'subjectAssignments'])->name('assignments.subject');
+        Route::get('/grades', [StudentSubmissionController::class, 'grades'])->name('grades.index');
         Route::get('/assignments/{assignment}', [StudentSubmissionController::class, 'show'])->name('assignments.show');
         Route::post('/assignments/{assignment}/submit', [StudentSubmissionController::class, 'store'])->name('assignments.submit');
         Route::post('/assignments/{assignment}/unsubmit', [StudentSubmissionController::class, 'unsubmit'])->name('assignments.unsubmit');
@@ -221,6 +232,10 @@ Route::prefix('ortu')->name('parent.')->group(function () {
 Route::post('/parent-code/{student}/regenerate', [App\Http\Controllers\ParentController::class, 'regenerateCode'])
     ->middleware(['auth'])
     ->name('parent.code.regenerate');
+
+Route::post('/parent-code/regenerate-all', [App\Http\Controllers\ParentController::class, 'regenerateAllCodes'])
+    ->middleware(['auth', 'role:admin,tatausaha'])
+    ->name('parent.code.regenerate-all');
 
 Route::post('/parent-code/{student}/reveal', [App\Http\Controllers\ParentController::class, 'revealCode'])
     ->middleware(['auth', 'role:admin,guru,tatausaha'])

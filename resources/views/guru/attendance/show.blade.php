@@ -19,6 +19,18 @@
                 <p class="text-muted mb-0">Informasi lengkap kehadiran siswa pada sesi ini</p>
             </div>
         </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('guru.attendances.edit', $attendance->id) }}" class="btn btn-primary btn-sm" style="border-radius: var(--radius-sm);">
+                <i class="fas fa-edit me-1"></i> Edit Absensi
+            </a>
+            <form action="{{ route('guru.attendances.destroy', $attendance->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh rekaman absensi ini?');" class="m-0">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: var(--radius-sm);">
+                    <i class="fas fa-trash-alt me-1"></i> Hapus
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="row">

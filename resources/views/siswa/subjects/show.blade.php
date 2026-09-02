@@ -5,17 +5,18 @@
 @section('content')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 mb-md-5 reveal">
         <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
-            <a href="{{ route('siswa.subjects.index') }}" class="btn btn-outline-secondary-theme btn-sm">
+            <a href="{{ route('siswa.subjects.show', $subject->id) }}" class="btn btn-outline-secondary-theme btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
             <div>
                 <nav aria-label="breadcrumb" class="mb-1">
                     <ol class="breadcrumb mb-1">
                         <li class="breadcrumb-item"><a href="{{ route('siswa.subjects.index') }}" style="color: var(--secondary);">Mata Pelajaran</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ $subject->name }}</li>
+                        <li class="breadcrumb-item"><a href="{{ route('siswa.subjects.show', $subject->id) }}" style="color: var(--secondary);">{{ $subject->name }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ $teacher->user->name }}</li>
                     </ol>
                 </nav>
-                <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary) !important;"><i class="fas fa-calendar-alt me-2 text-success"></i> Daftar Pertemuan: {{ $subject->name }}</h1>
+                <h1 class="h3 mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: var(--primary) !important;"><i class="fas fa-calendar-alt me-2 text-success"></i> {{ $subject->name }} ({{ $teacher->user->name }})</h1>
             </div>
         </div>
         <div>
@@ -28,41 +29,25 @@
     <div class="row">
         @forelse($meetings as $index => $meeting)
             <div class="col-md-6 mb-4 reveal reveal-delay-{{ min($index + 1, 5) }}">
-                <div class="card h-100 meeting-card border-0" 
-                     style="cursor: pointer; border-radius: var(--radius-md) !important; border-left: 6px solid var(--accent) !important;"
-                     onclick="window.location='{{ route('siswa.meetings.show', $meeting->id) }}'">
+                <div class="card h-100 subject-card border-0 shadow-sm item-hover-card" 
+                     onclick="window.location='{{ route('siswa.meetings.show', $meeting->id) }}'"
+                     style="cursor: pointer; border-radius: var(--radius-md) !important; border-top: 4px solid var(--accent) !important;">
                     
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <span class="status-badge status-badge--aktif mb-2">Pertemuan ke-{{ $meeting->number }}</span>
-                                <h5 class="fw-bold mb-1 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">{{ $meeting->title }}</h5>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block"><i class="fas fa-calendar-alt me-1"></i> {{ \Carbon\Carbon::parse($meeting->date)->format('d M Y') }}</small>
+                    <div class="card-body p-4 text-center d-flex flex-column align-items-center">
+                        <div class="mb-3">
+                            <div class="rounded-circle shadow-sm d-flex justify-content-center align-items-center border border-2 border-white" style="width: 70px; height: 70px; font-size: 1.8rem; background-color: rgba(25, 135, 84, 0.1); color: #198754;">
+                                <i class="fas fa-chalkboard"></i>
                             </div>
                         </div>
-
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="fas fa-chalkboard-user text-muted me-2"></i>
-                            <span class="small text-muted">Guru: {{ $meeting->teacher->user->name }}</span>
-                        </div>
-
-                        <div class="d-flex gap-3 pt-3 border-top flex-wrap align-items-center">
-                            <span class="small text-muted"><i class="fas fa-file-pdf me-1 text-danger"></i> Materi</span>
-                            <span class="small text-muted"><i class="fas fa-tasks me-1 text-warning"></i> Tugas</span>
-                            @if($meeting->video_link)
-                                {{-- ponytail: direct video link button for student --}}
-                                @if($meeting->video_link_status === 'finished')
-                                    <span class="small text-muted fw-bold ms-auto" onclick="event.stopPropagation();">
-                                        <i class="fas fa-video-slash me-1"></i> Kelas Selesai
-                                    </span>
-                                @else
-                                    <a href="{{ $meeting->video_link }}" target="_blank" class="small text-primary fw-bold ms-auto" style="text-decoration: none;" onclick="event.stopPropagation();">
-                                        <i class="fas fa-video me-1"></i> Gabung Kelas
-                                    </a>
-                                @endif
-                            @endif
+                        
+                        <span class="badge bg-light text-secondary border mb-2 px-3 py-1 rounded-pill" style="font-weight: 600;">Pertemuan {{ $meeting->number }}</span>
+                        <h5 class="fw-bold mb-2 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.4;">{{ $meeting->title }}</h5>
+                        <p class="text-muted small mb-4"><i class="fas fa-calendar-alt me-1 opacity-50"></i> {{ \Carbon\Carbon::parse($meeting->date)->format('d M Y') }}</p>
+                        
+                        <div class="mt-auto w-100 pt-3 border-top">
+                            <span class="status-badge status-badge--aktif w-100 justify-content-center py-2 bg-success-subtle text-success" style="font-size: 0.85rem;">
+                                <i class="fas fa-folder-open me-2"></i> Buka Pertemuan
+                            </span>
                         </div>
                     </div>
                 </div>

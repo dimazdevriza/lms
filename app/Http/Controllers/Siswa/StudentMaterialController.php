@@ -8,6 +8,7 @@ use App\Models\Material;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Meeting;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -50,27 +51,58 @@ class StudentMaterialController extends Controller
     }
 
     /**
-     * Menampilkan daftar Pertemuan untuk Mata Pelajaran tertentu
+     * Menampilkan daftar Guru (Pengajar) untuk Mata Pelajaran tertentu
      */
-    public function subjectMeetings(Subject $subject): View
+    public function subjectTeachers(Subject $subject): View
+    {
+        $student = Student::where('user_id', Auth::id())->with('schoolClass')->first();
+        abort_unless($student, 403);
+
+        // Ambil semua guru yang mengajar mapel ini di kelas ini
+        $teacherIdsFromAssignments = ClassSubjectTeacher::where('class_id', $student->class_id)
+            ->where('subject_id', $subject->id)
+            ->pluck('teacher_id')
+            ->unique();
+            
+        // Fallback jika belum ada di assignment tapi ada di meeting
+        if ($teacherIdsFromAssignments->isEmpty()) {
+            $teacherIdsFromMeetings = Meeting::where('class_id', $student->class_id)
+                ->where('subject_id', $subject->id)
+                ->where('is_visible', true)
+                ->pluck('teacher_id')
+                ->unique();
+            $teacherIdsFromAssignments = $teacherIdsFromMeetings;
+        }
+
+        $teachers = Teacher::with('user')->whereIn('id', $teacherIdsFromAssignments)->get();
+
+        return view('siswa.subjects.teachers', compact('subject', 'teachers', 'student'));
+    }
+
+    /**
+     * Menampilkan daftar Pertemuan untuk Guru dan Mata Pelajaran tertentu
+     */
+    public function teacherMeetings(Subject $subject, Teacher $teacher): View
     {
         $student = Student::where('user_id', Auth::id())->with('schoolClass')->first();
         abort_unless($student, 403);
 
         $meetings = Meeting::where('class_id', $student->class_id)
             ->where('subject_id', $subject->id)
+            ->where('teacher_id', $teacher->id)
             ->where('is_visible', true)
             ->with(['teacher.user'])
-            ->orderBy('number', 'asc')
+            ->orderBy('number', 'desc')
             ->get();
 
-        // Juga ambil materi mandiri (tanpa pertemuan) untuk mapel ini
+        // Juga ambil materi mandiri (tanpa pertemuan) untuk mapel ini dari guru ini
         $standaloneMaterials = Material::where('class_id', $student->class_id)
             ->where('subject_id', $subject->id)
+            ->where('teacher_id', $teacher->id)
             ->whereNull('meeting_id')
             ->get();
 
-        return view('siswa.subjects.show', compact('subject', 'meetings', 'standaloneMaterials', 'student'));
+        return view('siswa.subjects.show', compact('subject', 'teacher', 'meetings', 'standaloneMaterials', 'student'));
     }
 
     /**

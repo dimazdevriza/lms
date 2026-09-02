@@ -3,9 +3,19 @@
 @section('title', 'Data Siswa')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h1 class="h3 mb-0">Kelola Data Siswa</h1>
-        <a class="btn btn-primary" href="{{ route('tatausaha.students.create') }}">Tambah Siswa</a>
+        <div class="d-flex gap-2">
+            <form action="{{ route('parent.code.regenerate-all') }}" method="POST" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin memperbarui kode akses orang tua untuk SEMUA siswa? Tindakan ini biasanya dilakukan saat Tahun Ajaran Baru. Semua sesi login orang tua lama akan otomatis direset.');">
+                @csrf
+                <button type="submit" class="btn btn-outline-warning" title="Perbarui Semua Kode Ortu untuk Tahun Ajaran Baru">
+                    <i class="fas fa-sync-alt me-1"></i> Reset Semua Kode Ortu (Tahun Ajaran Baru)
+                </button>
+            </form>
+            <a class="btn btn-primary" href="{{ route('tatausaha.students.create') }}">
+                <i class="fas fa-plus me-1"></i> Tambah Siswa
+            </a>
+        </div>
     </div>
 
     <div class="card mb-3">
@@ -79,13 +89,19 @@
                         <td>{{ $student->schoolClass?->name ?? '-' }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2 allow-copy">
-                                <code class="bg-light px-2 py-1 rounded text-dark" style="font-size: 0.85rem;">{{ $student->parent_code }}</code>
+                                <code class="bg-light px-2 py-1 rounded text-dark fw-bold border" style="font-size: 0.85rem;">{{ $student->parent_code }}</code>
                                 <button class="btn btn-sm p-0 border-0 text-success copy-btn" data-code="{{ $student->parent_code }}" title="Salin Kode Ortu">
                                     <i class="fas fa-copy"></i>
                                 </button>
                                 <a href="{{ route('parent.view', $student->parent_code) }}" target="_blank" class="btn btn-sm p-0 border-0 text-primary" title="Buka Halaman Pemantauan">
                                     <i class="fas fa-external-link-alt"></i>
                                 </a>
+                                <form action="{{ route('parent.code.regenerate', $student) }}" method="POST" class="d-inline" onsubmit="return confirm('Kode akses lama untuk siswa {{ $student->user?->name }} akan tidak berlaku lagi. Lanjutkan?')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm p-0 border-0 text-warning" title="Perbarui Kode Ortu Siswa Ini">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                         <td class="text-end">
