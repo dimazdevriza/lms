@@ -10,91 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/parent-dashboard.css') }}">
     <style>
-        .today-card {
-            background: #ffffff;
-            border-radius: var(--radius-lg);
-            border: 2px solid rgba(27, 94, 32, 0.12);
-            box-shadow: 0 8px 30px rgba(27, 94, 32, 0.08);
-            padding: 24px 28px;
-            margin-bottom: 28px;
-        }
-
-        .today-status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
-            border-radius: 100px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .today-status--hadir { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; }
-        .today-status--izin { background: #FFF8E1; color: #F57F17; border: 1px solid #FFE082; }
-        .today-status--sakit { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
-        .today-status--alpa { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
-        .today-status--belum { background: #F5F5F5; color: #616161; border: 1px solid #E0E0E0; }
-
-        .section-heading {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            font-size: 1.25rem;
-            color: var(--text-heading);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-heading i {
-            color: var(--primary);
-        }
-
-        .pr-card {
-            background: #ffffff;
-            border-radius: var(--radius-md);
-            border: 1px solid #E0E0E0;
-            border-left: 5px solid var(--accent);
-            padding: 18px 20px;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
-        }
-        .pr-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-            transform: translateY(-2px);
-        }
-        .pr-badge {
-            background: #FFF8E1;
-            color: #F57F17;
-            border: 1px solid #FFE082;
-            font-weight: 700;
-            font-size: 0.75rem;
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-transform: uppercase;
-        }
-
-        .pr-done-banner {
-            background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
-            border: 1px solid #C8E6C9;
-            border-radius: var(--radius-md);
-            padding: 24px;
-            text-align: center;
-            color: #1B5E20;
-        }
-
-        .nav-tabs-parent .nav-link {
-            font-weight: 700;
-            color: #666;
-            border: none;
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-        }
-        .nav-tabs-parent .nav-link.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
         /* Strict No-Blue Override for Parent Portal */
         .nav-pills .nav-link.active,
         .nav-pills .show > .nav-link {
@@ -131,9 +46,16 @@
         .badge.bg-primary {
             background-color: #1B5E20 !important;
         }
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        .transition-all:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        }
     </style>
 </head>
-<body>
+<body style="background-color: #FAFAF7;">
 
     <!-- Header Banner -->
     <header class="header-banner">
@@ -176,7 +98,7 @@
         </div>
     </header>
 
-    <main class="container" style="padding-bottom: 40px;">
+    <main class="container" style="padding-bottom: 50px;">
         @if(session('success'))
             <div class="alert alert-custom alert-dismissible fade show mt-2" role="alert">
                 <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
@@ -343,47 +265,111 @@
             </div>
         </div>
 
-                                <span class="d-block small text-secondary">Berikut rincian Mata Pelajaran yang memiliki tanggungan tugas belum dikerjakan dalam 1 minggu terakhir:</span>
+        <!-- ==========================================
+             3. PILIHAN RINCIAN AKTIVITAS (3 LARGE INTERACTIVE CARDS)
+             ========================================== -->
+        <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                    <i class="fas fa-compass text-success me-2"></i> Pilihan Rincian Aktivitas Anak
+                </h5>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace" style="font-size: 0.7rem;">
+                    Ketuk Card untuk Buka Halaman
+                </span>
+            </div>
+            <p class="text-muted small mb-3">Pilih salah satu menu di bawah ini untuk melihat rincian riwayat lengkap dari aktivitas sekolah anak Anda:</p>
+        </div>
+
+        <div class="row g-3">
+            <!-- KARTU 1: PRESENSI & KEHADIRAN MAPEL -->
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden transition-all" style="background-color: #ffffff; border-top: 4px solid #1B5E20 !important;">
+                    <div class="card-body p-3.5 p-md-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="p-3 bg-success-subtle text-success rounded-3">
+                                <i class="fas fa-book-reader fa-2x"></i>
                             </div>
+                            <span class="badge bg-success text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                {{ $presentPct }}% Hadir
+                            </span>
                         </div>
+                        <h5 class="fw-bold text-dark mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            1. Presensi & Kehadiran
+                        </h5>
+                        <p class="text-muted small mb-3 flex-grow-1">
+                            Lihat rincian kehadiran per jam mata pelajaran hari ini serta riwayat presensi hari-hari sebelumnya.
+                        </p>
+                        <a href="{{ route('parent.presensi') }}" class="btn btn-success w-100 rounded-3 fw-bold py-2.5 d-flex align-items-center justify-content-between" style="background-color: #1B5E20; border: none;">
+                            <span><i class="fas fa-eye me-1.5"></i> Lihat Rincian Presensi</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-                        @foreach($pendingAssignments as $pa)
-                            <div class="pr-card mb-3 p-3 bg-white rounded-3 shadow-sm border border-warning" style="border-left: 6px solid #f57c00 !important;">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                                    <div class="flex-grow-1">
-                                        <!-- HIGHLIGHT MATA PELAJARAN -->
-                                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                            <span class="badge bg-success px-3 py-2 fs-6 rounded-pill text-white fw-bold">
-                                                <i class="fas fa-book me-1"></i> MAPEL: {{ strtoupper($pa->subject?->name ?? 'Mata Pelajaran') }}
-                                            </span>
-                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-2 fw-semibold" style="font-size: 0.8rem;">
-                                                <i class="fas fa-times-circle me-1"></i> BELUM DIKUMPULKAN
-                                            </span>
-                                        </div>
-                                        
-                                        <h5 class="fw-bold text-dark mb-1 fs-5">{{ $pa->title }}</h5>
-                                        <div class="text-muted small mb-2"><i class="fas fa-user-tie me-1"></i>Guru Pengampu: <strong>{{ $pa->teacher?->user->name ?? '-' }}</strong></div>
-                                        
-                                        @if($pa->description)
-                                            <p class="text-secondary small mb-1 p-2 bg-light rounded-2" style="max-width: 750px;">
-                                                {{ Str::limit(strip_tags($pa->description), 160) }}
-                                            </p>
-                                        @endif
-                                    </div>
+            <!-- KARTU 2: PR & TANGGUNGAN TUGAS -->
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden transition-all" style="background-color: #ffffff; border-top: 4px solid {{ $pendingAssignments->count() > 0 ? '#F57C00' : '#1B5E20' }} !important;">
+                    <div class="card-body p-3.5 p-md-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="p-3 bg-warning-subtle text-warning rounded-3">
+                                <i class="fas fa-tasks fa-2x"></i>
+                            </div>
+                            @if($pendingAssignments->count() > 0)
+                                <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                    {{ $pendingAssignments->count() }} PR Belum
+                                </span>
+                            @else
+                                <span class="badge bg-success text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                    Semua PR Selesai
+                                </span>
+                            @endif
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            2. Tanggungan PR & Tugas
+                        </h5>
+                        <p class="text-muted small mb-3 flex-grow-1">
+                            Lihat daftar PR 1 minggu terakhir yang belum dikumpulkan beserta riwayat tugas yang sudah dikerjakan.
+                        </p>
+                        <a href="{{ route('parent.tugas') }}" class="btn btn-warning text-dark w-100 rounded-3 fw-bold py-2.5 d-flex align-items-center justify-content-between" style="background-color: #F9A825; border: none;">
+                            <span><i class="fas fa-list-check me-1.5"></i> Lihat Tanggungan PR</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
+            <!-- KARTU 3: REKAP NILAI & CATATAN RAPOR -->
+            <div class="col-12 col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden transition-all" style="background-color: #ffffff; border-top: 4px solid #F9A825 !important;">
+                    <div class="card-body p-3.5 p-md-4 d-flex flex-column">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="p-3 bg-warning-subtle text-warning rounded-3">
+                                <i class="fas fa-graduation-cap fa-2x"></i>
+                            </div>
+                            <span class="badge bg-dark text-white px-2.5 py-1 rounded-pill small font-monospace fw-bold">
+                                Avg {{ $avgScore }}/100
+                            </span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            3. Rekap Nilai & Rapor
+                        </h5>
+                        <p class="text-muted small mb-3 flex-grow-1">
+                            Lihat rekapitulasi nilai tugas, ulangan per mata pelajaran, serta catatan perkembangan belajar anak.
+                        </p>
+                        <a href="{{ route('parent.nilai') }}" class="btn btn-outline-dark w-100 rounded-3 fw-bold py-2.5 d-flex align-items-center justify-content-between">
+                            <span><i class="fas fa-chart-line me-1.5"></i> Lihat Rekap Nilai</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer bg-white border-top py-3 text-center text-muted small">
         <div class="container">
-            <div class="footer-inner">
-                <div class="footer-logo">
-                    <div class="footer-logo-icon">
-                        <i class="fas fa-school"></i>
-                    </div>
-                    <span class="footer-logo-text">SMA Negeri 15 Padang</span>
-                </div>
-                <p class="footer-copy">&copy; {{ date('Y') }} LMS SMA Negeri 15 Padang. Portal Pemantauan Orang Tua.</p>
-            </div>
+            SMAN 15 Padang &copy; {{ date('Y') }} &middot; Portal Pemantauan Orang Tua
         </div>
     </footer>
 
