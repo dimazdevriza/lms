@@ -223,6 +223,9 @@ Route::prefix('ortu')->name('parent.')->group(function () {
     Route::get('/', [App\Http\Controllers\ParentController::class, 'index'])->name('index');
     Route::post('/access', [App\Http\Controllers\ParentController::class, 'access'])->middleware('throttle:parent-access')->name('access');
     Route::get('/dashboard', [App\Http\Controllers\ParentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/presensi', [App\Http\Controllers\ParentController::class, 'presensi'])->name('presensi');
+    Route::get('/tugas', [App\Http\Controllers\ParentController::class, 'tugas'])->name('tugas');
+    Route::get('/nilai', [App\Http\Controllers\ParentController::class, 'nilai'])->name('nilai');
     Route::get('/view/{code}', [App\Http\Controllers\ParentController::class, 'viewDirect'])->middleware('throttle:parent-direct')->name('view');
     Route::post('/view/confirm', [App\Http\Controllers\ParentController::class, 'viewDirectConfirm'])->middleware('throttle:parent-confirm')->name('view.confirm');
     Route::post('/logout', [App\Http\Controllers\ParentController::class, 'logout'])->name('logout');

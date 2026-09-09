@@ -297,6 +297,104 @@ class ParentController extends Controller
         ));
     }
 
+    public function presensi(Request $request)
+    {
+        $student = $this->resolveAuthenticatedStudent($request);
+        if (!$student) {
+            return redirect()->route('parent.index')->withErrors(['parent_code' => 'Silakan masuk terlebih dahulu.']);
+        }
+
+        $studentId = $student->id;
+        $today = now()->format('Y-m-d');
+
+        $todayDailyAttendance = ClassAttendanceDetail::where('student_id', $studentId)
+            ->whereHas('attendance', fn($q) => $q->whereDate('date', $today))
+            ->with('attendance')
+            ->first();
+
+        $todaySubjectAttendances = AttendanceDetail::where('student_id', $studentId)
+            ->whereHas('attendance', fn($q) => $q->whereDate('date', $today))
+            ->with(['attendance.subject', 'attendance.teacher.user'])
+            ->get();
+
+        $totSubject = AttendanceDetail::where('student_id', $studentId)->count();
+        $hadirSubject = AttendanceDetail::where('student_id', $studentId)->where('status', 'hadir')->count();
+
+        $subjectAttendances = AttendanceDetail::where('student_id', $studentId)
+            ->join('attendances', 'attendance_details.attendance_id', '=', 'attendances.id')
+            ->select('attendance_details.*')
+            ->orderBy('attendances.date', 'desc')
+            ->with(['attendance.subject', 'attendance.teacher.user'])
+            ->paginate(15, ['*'], 'subject_page')
+            ->withQueryString();
+
+        $dailyAttendances = ClassAttendanceDetail::where('student_id', $studentId)
+            ->join('class_attendances', 'class_attendance_details.class_attendance_id', '=', 'class_attendances.id')
+            ->select('class_attendance_details.*')
+            ->orderBy('class_attendances.date', 'desc')
+            ->with('attendance')
+            ->paginate(15, ['*'], 'daily_page')
+            ->withQueryString();
+
+        return view('parent.presensi', compact('student', 'todayDailyAttendance', 'todaySubjectAttendances', 'totSubject', 'hadirSubject', 'subjectAttendances', 'dailyAttendances'));
+    }
+
+    public function tugas(Request $request)
+    {
+        $student = $this->resolveAuthenticatedStudent($request);
+        if (!$student) {
+            return redirect()->route('parent.index')->withErrors(['parent_code' => 'Silakan masuk terlebih dahulu.']);
+        }
+
+        $studentId = $student->id;
+        $oneWeekAgo = now()->subDays(7);
+
+        $pendingAssignments = Assignment::where('class_id', $student->class_id)
+            ->where(function ($query) use ($oneWeekAgo) {
+                $query->where('created_at', '>=', $oneWeekAgo)
+                      ->orWhere('due_at', '>=', $oneWeekAgo);
+            })
+            ->whereDoesntHave('submissions', fn($q) => $q->where('student_id', $studentId))
+            ->with(['subject', 'teacher.user'])
+            ->orderBy('due_at', 'asc')
+            ->get();
+
+        $submissions = AssignmentSubmission::where('student_id', $studentId)
+            ->with('assignment.subject')
+            ->latest()
+            ->paginate(15, ['*'], 'sub_page')
+            ->withQueryString();
+
+        return view('parent.tugas', compact('student', 'pendingAssignments', 'submissions'));
+    }
+
+    public function nilai(Request $request)
+    {
+        $student = $this->resolveAuthenticatedStudent($request);
+        if (!$student) {
+            return redirect()->route('parent.index')->withErrors(['parent_code' => 'Silakan masuk terlebih dahulu.']);
+        }
+
+        $studentId = $student->id;
+
+        $grades = StudentGrade::where('student_id', $studentId)
+            ->with(['subject', 'class'])
+            ->latest()
+            ->paginate(15, ['*'], 'grade_page')
+            ->withQueryString();
+
+        $gradedSubmissionsQuery = AssignmentSubmission::where('student_id', $studentId)->whereNotNull('score');
+        $gradedTasks = $gradedSubmissionsQuery->count();
+        $avgScore = $gradedTasks > 0 ? round($gradedSubmissionsQuery->avg('score')) : '-';
+
+        $behaviorRecords = BehaviorRecord::where('student_id', $studentId)
+            ->latest()
+            ->paginate(10, ['*'], 'behavior_page')
+            ->withQueryString();
+
+        return view('parent.nilai', compact('student', 'grades', 'gradedTasks', 'avgScore', 'behaviorRecords'));
+    }
+
     public function logout()
     {
         $this->clearParentSession();
