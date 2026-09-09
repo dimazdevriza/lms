@@ -147,192 +147,254 @@
             </div>
         @endif
 
-        <!-- Quick Summary Cards (3 Card Ringkasan) -->
-        <div class="stats-grid mt-3">
-            @php
-                $presentPct = $totDaily > 0 ? round(($hadirDaily / $totDaily) * 100, 1) : 100;
-            @endphp
-
-            <div class="stat-card stat-card--attendance">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-label">Kehadiran Siswa</div>
-                        <div class="stat-value stat-value--green">{{ $presentPct }}%</div>
-                        <div class="stat-sub">{{ $hadirDaily }} dari {{ $totDaily }} hari sekolah</div>
-                    </div>
-                    <div class="stat-icon-circle stat-icon-circle--green">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-card--grades">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-label">Rata-Rata Nilai Tugas</div>
-                        <div class="stat-value stat-value--primary">{{ $avgScore }}</div>
-                        <div class="stat-sub">{{ $gradedTasks }} tugas telah dinilai</div>
-                    </div>
-                    <div class="stat-icon-circle stat-icon-circle--gold">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-card--behavior">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="stat-label">Catatan Perilaku</div>
-                        <div class="stat-value stat-value--primary">{{ $totalBehaviors }}</div>
-                        <div class="stat-sub">
-                            <span class="text-success">{{ $goodBehaviors }} Prestasi</span> &middot;
-                            <span class="text-danger">{{ $badBehaviors }} Teguran</span>
-                        </div>
-                    </div>
-                    <div class="stat-icon-circle stat-icon-circle--deep">
-                        <i class="fas fa-award"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- ==========================================
-             SEKSI 1: KEHADIRAN MATA PELAJARAN HARI INI (GURU MAPEL)
+             1. EXECUTIVE RECAP CARD (1 LAYAR RINGKAS HP & DESKTOP)
              ========================================== -->
-        <div class="today-card mt-3">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <div>
-                    <h5 class="fw-bold mb-1 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">
-                        <i class="fas fa-book-reader text-success me-2"></i>Kehadiran Mata Pelajaran Hari Ini
-                    </h5>
-                    <span class="text-muted small">
-                        <i class="far fa-clock me-1"></i>Presensi dari Guru Mata Pelajaran &middot; {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}
-                    </span>
+        <div class="card border-0 shadow-lg mb-4 overflow-hidden" style="border-radius: 20px; background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%); color: white;">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-white-20">
+                    <div>
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                            ⚡ REKAP EKSEKUTIF UTAMA
+                        </span>
+                        <h4 class="fw-bold text-white mb-0 mt-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            Ringkasan Aktivitas {{ $student->user->name }}
+                        </h4>
+                    </div>
+                    <div class="text-white-50 small font-monospace d-none d-sm-block text-end">
+                        <i class="far fa-calendar-alt me-1"></i>{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}
+                    </div>
                 </div>
-                <div>
-                    <a href="#historyModal" data-bs-toggle="modal" class="btn btn-outline-success btn-sm rounded-pill font-weight-bold">
-                        <i class="fas fa-history me-1"></i> Lihat Riwayat Kehadiran Hari Sebelumnya
-                    </a>
-                </div>
-            </div>
 
-            @if($todaySubjectAttendances->count() > 0)
-                <div class="row g-3">
-                    @foreach($todaySubjectAttendances as $tsa)
-                        @php
-                            $status = strtolower($tsa->status);
-                            $badgeClass = match($status) {
-                                'hadir' => 'today-status--hadir',
-                                'izin' => 'today-status--izin',
-                                'sakit' => 'today-status--sakit',
-                                'alpa', 'cabut' => 'today-status--alpa',
-                                default => 'today-status--belum'
-                            };
-                            $icon = match($status) {
-                                'hadir' => 'fa-check-circle',
-                                'izin' => 'fa-envelope',
-                                'sakit' => 'fa-notes-medical',
-                                'alpa', 'cabut' => 'fa-times-circle',
-                                default => 'fa-minus-circle'
-                            };
-                        @endphp
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold text-dark fs-6 mb-1">{{ $tsa->attendance?->subject?->name }}</div>
-                                    <div class="text-muted small"><i class="fas fa-user-tie me-1"></i>Guru: {{ $tsa->attendance?->teacher?->user->name ?? 'Guru Pengampu' }}</div>
-                                </div>
-                                <div>
-                                    <span class="today-status-badge {{ $badgeClass }}" style="font-size: 0.9rem; padding: 6px 14px;">
-                                        <i class="fas {{ $icon }}"></i> {{ strtoupper($status) }}
-                                    </span>
-                                </div>
+                <div class="row g-2">
+                    <!-- Point 1: Kehadiran Hari Ini -->
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                <i class="fas fa-user-check me-1 text-warning"></i> 1. Presensi Hari Ini
                             </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="p-4 bg-light rounded-3 border text-center">
-                    <div class="text-muted fw-bold mb-1"><i class="fas fa-info-circle text-primary me-1"></i>Belum Ada Catatan Presensi Mata Pelajaran Hari Ini</div>
-                    <span class="text-secondary small">Guru mata pelajaran belum menginput absensi jam pelajaran untuk hari ini.</span>
-                </div>
-            @endif
-        </div>
-
-        <!-- ==========================================
-             SEKSI 2: TUGAS BARU / PR YANG BELUM DIKERJAKAN (AKTIVITAS 1 MINGGU TERAKHIR)
-             ========================================== -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h4 class="section-heading mb-0">
-                    <i class="fas fa-tasks text-warning me-2"></i> Pekerjaan Rumah (PR) & Tugas Belum Dikerjakan
-                </h4>
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill font-weight-semibold">
-                    <i class="fas fa-calendar-week text-success me-1"></i> Aktivitas 1 Minggu Terakhir
-                </span>
-            </div>
-
-            @if($pendingAssignments->count() > 0)
-                <div class="alert alert-warning border-0 rounded-3 mb-3 d-flex align-items-center gap-3 p-3 shadow-sm">
-                    <div class="bg-warning text-dark p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink:0;">
-                        <i class="fas fa-exclamation-triangle fa-lg"></i>
-                    </div>
-                    <div>
-                        <strong class="fs-6 text-dark">Ada {{ $pendingAssignments->count() }} PR / Tugas yang belum dikumpulkan oleh anak Anda.</strong>
-                        <span class="d-block small text-secondary">Berikut adalah rincian Mata Pelajaran yang memiliki tanggungan tugas belum dikerjakan dalam 1 minggu terakhir:</span>
-                    </div>
-                </div>
-
-                @foreach($pendingAssignments as $pa)
-                    <div class="pr-card mb-3 p-3 bg-white rounded-3 shadow-sm border border-warning" style="border-left: 6px solid #f57c00 !important;">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                            <div class="flex-grow-1">
-                                <!-- HIGHLIGHT MATA PELAJARAN -->
-                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                    <span class="badge bg-success px-3 py-2 fs-6 rounded-pill text-white fw-bold">
-                                        <i class="fas fa-book me-1"></i> MAPEL: {{ strtoupper($pa->subject?->name ?? 'Mata Pelajaran') }}
+                            <div class="fw-bold fs-6 text-white">
+                                @if($todaySubjectAttendances->count() > 0)
+                                    @php
+                                        $hadirTodayCount = $todaySubjectAttendances->where('status', 'hadir')->count();
+                                        $totTodayCount = $todaySubjectAttendances->count();
+                                    @endphp
+                                    <span class="badge bg-success border border-light px-2 py-1 fs-6">
+                                        <i class="fas fa-check-circle me-1"></i> {{ $hadirTodayCount }}/{{ $totTodayCount }} Mapel Hadir
                                     </span>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-2 fw-semibold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-times-circle me-1"></i> BELUM DIKUMPULKAN
+                                @else
+                                    <span class="badge bg-light text-dark px-2 py-1 fs-6">
+                                        Belum Ada Absen Mapel
                                     </span>
-                                </div>
-                                
-                                <h5 class="fw-bold text-dark mb-1 fs-5">{{ $pa->title }}</h5>
-                                <div class="text-muted small mb-2"><i class="fas fa-user-tie me-1"></i>Guru Pengampu: <strong>{{ $pa->teacher?->user->name ?? '-' }}</strong></div>
-                                
-                                @if($pa->description)
-                                    <p class="text-secondary small mb-1 p-2 bg-light rounded-2" style="max-width: 750px;">
-                                        {{ Str::limit(strip_tags($pa->description), 160) }}
-                                    </p>
                                 @endif
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="text-end ms-auto">
-                                <div class="bg-danger text-white px-3 py-2 rounded-3 text-center shadow-sm">
-                                    <div class="small fw-bold" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">TENGGAT WAKTU</div>
-                                    <div class="fw-extrabold font-monospace fs-6">{{ \Carbon\Carbon::parse($pa->due_at)->format('d M Y') }}</div>
-                                    <div class="small font-monospace">{{ \Carbon\Carbon::parse($pa->due_at)->format('H:i') }} WIB</div>
-                                </div>
-                                <div class="text-danger fw-semibold small mt-1">
-                                    <i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($pa->due_at)->diffForHumans() }}
-                                </div>
+                    <!-- Point 2: PR Belum Dikerjakan -->
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                <i class="fas fa-tasks me-1 text-warning"></i> 2. Tanggungan PR (1 Minggu)
+                            </div>
+                            <div class="fw-bold fs-6 text-white">
+                                @if($pendingAssignments->count() > 0)
+                                    <span class="badge bg-danger border border-light px-2 py-1 fs-6">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $pendingAssignments->count() }} PR Belum Selesai
+                                    </span>
+                                @else
+                                    <span class="badge bg-success border border-light px-2 py-1 fs-6">
+                                        <i class="fas fa-check-circle me-1"></i> Semua PR Selesai
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
-                @endforeach
-            @else
-                <div class="pr-done-banner p-4 bg-light rounded-3 text-center border">
-                    <div class="display-6 mb-2">🎉</div>
-                    <h5 class="fw-bold mb-1 text-success">Semua PR & Tugas 1 Minggu Terakhir Sudah Selesai!</h5>
-                    <p class="mb-0 text-muted small">Anak Anda tidak memiliki tanggungan Pekerjaan Rumah (PR) dari mata pelajaran manapun dalam 1 minggu terakhir.</p>
+
+                    <!-- Point 3: Rata-Rata Nilai -->
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                <i class="fas fa-graduation-cap me-1 text-warning"></i> 3. Rata-Rata Nilai Tugas
+                            </div>
+                            <div class="fw-bold fs-5 text-white">
+                                {{ $avgScore }} <span class="fs-6 text-white-50">/ 100</span>
+                                <span class="small text-white-50 ms-1">({{ $gradedTasks }} Tugas)</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            @endif
+            </div>
         </div>
 
         <!-- ==========================================
-             SEKSI 3: REKAP NILAI & CATATAN PERILAKU
+             NAVIGASI POINT RINCIAN (TAB CLEAN PADA HP)
              ========================================== -->
-        <div class="mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                <i class="fas fa-list-ul text-success me-2"></i> Pilihan Rincian Aktivitas
+            </h5>
+            <span class="text-muted small">Pilih menu di bawah untuk melihat detail rincian:</span>
+        </div>
+
+        <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-4 border" id="parentMainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-presensi-btn" data-bs-toggle="pill" data-bs-target="#tab-presensi" type="button" role="tab">
+                    <i class="fas fa-book-reader me-1 text-success"></i> 1. Presensi Mapel
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center position-relative" id="tab-pr-btn" data-bs-toggle="pill" data-bs-target="#tab-pr" type="button" role="tab">
+                    <i class="fas fa-tasks me-1 text-warning"></i> 2. Tanggungan PR
+                    @if($pendingAssignments->count() > 0)
+                        <span class="badge bg-danger rounded-circle ms-1">{{ $pendingAssignments->count() }}</span>
+                    @endif
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-nilai-btn" data-bs-toggle="pill" data-bs-target="#tab-nilai" type="button" role="tab">
+                    <i class="fas fa-graduation-cap me-1 text-primary"></i> 3. Nilai & Catatan
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="parentMainTabsContent">
+            <!-- TAB 1: PRESENSI MAPEL HARI INI -->
+            <div class="tab-pane fade show active" id="tab-presensi" role="tabpanel">
+                <div class="today-card">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                <i class="fas fa-book-reader text-success me-2"></i>Kehadiran Mata Pelajaran Hari Ini
+                            </h5>
+                            <span class="text-muted small">
+                                <i class="far fa-clock me-1"></i>Presensi dari Guru Mata Pelajaran &middot; {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}
+                            </span>
+                        </div>
+                        <div>
+                            <a href="#historyModal" data-bs-toggle="modal" class="btn btn-outline-success btn-sm rounded-pill font-weight-bold">
+                                <i class="fas fa-history me-1"></i> Riwayat Hari Sebelumnya
+                            </a>
+                        </div>
+                    </div>
+
+                    @if($todaySubjectAttendances->count() > 0)
+                        <div class="row g-3">
+                            @foreach($todaySubjectAttendances as $tsa)
+                                @php
+                                    $status = strtolower($tsa->status);
+                                    $badgeClass = match($status) {
+                                        'hadir' => 'today-status--hadir',
+                                        'izin' => 'today-status--izin',
+                                        'sakit' => 'today-status--sakit',
+                                        'alpa', 'cabut' => 'today-status--alpa',
+                                        default => 'today-status--belum'
+                                    };
+                                    $icon = match($status) {
+                                        'hadir' => 'fa-check-circle',
+                                        'izin' => 'fa-envelope',
+                                        'sakit' => 'fa-notes-medical',
+                                        'alpa', 'cabut' => 'fa-times-circle',
+                                        default => 'fa-minus-circle'
+                                    };
+                                @endphp
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6 mb-1">{{ $tsa->attendance?->subject?->name }}</div>
+                                            <div class="text-muted small"><i class="fas fa-user-tie me-1"></i>Guru: {{ $tsa->attendance?->teacher?->user->name ?? 'Guru Pengampu' }}</div>
+                                        </div>
+                                        <div>
+                                            <span class="today-status-badge {{ $badgeClass }}" style="font-size: 0.9rem; padding: 6px 14px;">
+                                                <i class="fas {{ $icon }}"></i> {{ strtoupper($status) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-4 bg-light rounded-3 border text-center">
+                            <div class="text-muted fw-bold mb-1"><i class="fas fa-info-circle text-primary me-1"></i>Belum Ada Catatan Presensi Mata Pelajaran Hari Ini</div>
+                            <span class="text-secondary small">Guru mata pelajaran belum menginput absensi jam pelajaran untuk hari ini.</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- TAB 2: PR BELUM DIKERJAKAN (SOROTAN 1 MINGGU TERAKHIR) -->
+            <div class="tab-pane fade" id="tab-pr" role="tabpanel">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <h5 class="fw-bold mb-0 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            <i class="fas fa-tasks text-warning me-2"></i> Pekerjaan Rumah (PR) & Tugas Belum Dikerjakan
+                        </h5>
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill font-weight-semibold">
+                            <i class="fas fa-calendar-week text-success me-1"></i> Sorotan 1 Minggu Terakhir
+                        </span>
+                    </div>
+
+                    @if($pendingAssignments->count() > 0)
+                        <div class="alert alert-warning border-0 rounded-3 mb-3 d-flex align-items-center gap-3 p-3 shadow-sm">
+                            <div class="bg-warning text-dark p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink:0;">
+                                <i class="fas fa-exclamation-triangle fa-lg"></i>
+                            </div>
+                            <div>
+                                <strong class="fs-6 text-dark">Ada {{ $pendingAssignments->count() }} PR / Tugas yang belum dikumpulkan oleh anak Anda.</strong>
+                                <span class="d-block small text-secondary">Berikut rincian Mata Pelajaran yang memiliki tanggungan tugas belum dikerjakan dalam 1 minggu terakhir:</span>
+                            </div>
+                        </div>
+
+                        @foreach($pendingAssignments as $pa)
+                            <div class="pr-card mb-3 p-3 bg-white rounded-3 shadow-sm border border-warning" style="border-left: 6px solid #f57c00 !important;">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                                    <div class="flex-grow-1">
+                                        <!-- HIGHLIGHT MATA PELAJARAN -->
+                                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                            <span class="badge bg-success px-3 py-2 fs-6 rounded-pill text-white fw-bold">
+                                                <i class="fas fa-book me-1"></i> MAPEL: {{ strtoupper($pa->subject?->name ?? 'Mata Pelajaran') }}
+                                            </span>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-2 fw-semibold" style="font-size: 0.8rem;">
+                                                <i class="fas fa-times-circle me-1"></i> BELUM DIKUMPULKAN
+                                            </span>
+                                        </div>
+                                        
+                                        <h5 class="fw-bold text-dark mb-1 fs-5">{{ $pa->title }}</h5>
+                                        <div class="text-muted small mb-2"><i class="fas fa-user-tie me-1"></i>Guru Pengampu: <strong>{{ $pa->teacher?->user->name ?? '-' }}</strong></div>
+                                        
+                                        @if($pa->description)
+                                            <p class="text-secondary small mb-1 p-2 bg-light rounded-2" style="max-width: 750px;">
+                                                {{ Str::limit(strip_tags($pa->description), 160) }}
+                                            </p>
+                                        @endif
+                                    </div>
+
+                                    <div class="text-end ms-auto">
+                                        <div class="bg-danger text-white px-3 py-2 rounded-3 text-center shadow-sm">
+                                            <div class="small fw-bold" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">TENGGAT WAKTU</div>
+                                            <div class="fw-extrabold font-monospace fs-6">{{ \Carbon\Carbon::parse($pa->due_at)->format('d M Y') }}</div>
+                                            <div class="small font-monospace">{{ \Carbon\Carbon::parse($pa->due_at)->format('H:i') }} WIB</div>
+                                        </div>
+                                        <div class="text-danger fw-semibold small mt-1">
+                                            <i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($pa->due_at)->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="pr-done-banner p-4 bg-light rounded-3 text-center border">
+                            <div class="display-6 mb-2">🎉</div>
+                            <h5 class="fw-bold mb-1 text-success">Semua PR & Tugas 1 Minggu Terakhir Sudah Selesai!</h5>
+                            <p class="mb-0 text-muted small">Anak Anda tidak memiliki tanggungan Pekerjaan Rumah (PR) dari mata pelajaran manapun dalam 1 minggu terakhir.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- TAB 3: REKAP NILAI & CATATAN PERILAKU -->
+            <div class="tab-pane fade" id="tab-nilai" role="tabpanel">
+                <div class="mb-4">
             <h4 class="section-heading">
                 <i class="fas fa-graduation-cap"></i> Rekap Nilai & Catatan Wali Kelas
             </h4>
