@@ -203,8 +203,13 @@ class ParentController extends Controller
             ->with(['attendance.subject', 'attendance.teacher.user'])
             ->get();
 
-        // Tugas Baru (PR) yang Belum Dikerjakan oleh Siswa
+        // Tugas Baru (PR) yang Belum Dikerjakan oleh Siswa (Sorotan Aktivitas 1 Minggu Terakhir)
+        $oneWeekAgo = now()->subDays(7);
         $pendingAssignments = Assignment::where('class_id', $student->class_id)
+            ->where(function ($query) use ($oneWeekAgo) {
+                $query->where('created_at', '>=', $oneWeekAgo)
+                      ->orWhere('due_at', '>=', $oneWeekAgo);
+            })
             ->whereDoesntHave('submissions', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
             })

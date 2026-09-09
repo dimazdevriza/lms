@@ -260,52 +260,71 @@
         </div>
 
         <!-- ==========================================
-             SEKSI 2: TUGAS BARU / PR YANG BELUM DIKERJAKAN
+             SEKSI 2: TUGAS BARU / PR YANG BELUM DIKERJAKAN (AKTIVITAS 1 MINGGU TERAKHIR)
              ========================================== -->
         <div class="mb-4">
-            <h4 class="section-heading">
-                <i class="fas fa-tasks"></i> Pekerjaan Rumah (PR) & Tugas Baru Anak
-            </h4>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h4 class="section-heading mb-0">
+                    <i class="fas fa-tasks text-warning me-2"></i> Pekerjaan Rumah (PR) & Tugas Belum Dikerjakan
+                </h4>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill font-weight-semibold">
+                    <i class="fas fa-calendar-week text-success me-1"></i> Aktivitas 1 Minggu Terakhir
+                </span>
+            </div>
 
             @if($pendingAssignments->count() > 0)
-                <div class="alert alert-warning border-0 rounded-3 mb-3 d-flex align-items-center gap-2">
-                    <i class="fas fa-exclamation-triangle fa-lg text-warning me-2"></i>
+                <div class="alert alert-warning border-0 rounded-3 mb-3 d-flex align-items-center gap-3 p-3 shadow-sm">
+                    <div class="bg-warning text-dark p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink:0;">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                    </div>
                     <div>
-                        <strong>Ada {{ $pendingAssignments->count() }} Tugas/PR yang belum dikerjakan oleh anak Anda.</strong>
-                        <span class="d-block small text-muted">Mohon ingatkan anak Anda untuk menyelesaikan tugas sebelum batas tenggat waktu.</span>
+                        <strong class="fs-6 text-dark">Ada {{ $pendingAssignments->count() }} PR / Tugas yang belum dikumpulkan oleh anak Anda.</strong>
+                        <span class="d-block small text-secondary">Berikut adalah rincian Mata Pelajaran yang memiliki tanggungan tugas belum dikerjakan dalam 1 minggu terakhir:</span>
                     </div>
                 </div>
 
                 @foreach($pendingAssignments as $pa)
-                    <div class="pr-card">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                            <div>
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="pr-badge"><i class="fas fa-book-open me-1"></i>PR / Tugas</span>
-                                    <span class="fw-bold text-success">{{ $pa->subject?->name }}</span>
+                    <div class="pr-card mb-3 p-3 bg-white rounded-3 shadow-sm border border-warning" style="border-left: 6px solid #f57c00 !important;">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div class="flex-grow-1">
+                                <!-- HIGHLIGHT MATA PELAJARAN -->
+                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                    <span class="badge bg-success px-3 py-2 fs-6 rounded-pill text-white fw-bold">
+                                        <i class="fas fa-book me-1"></i> MAPEL: {{ strtoupper($pa->subject?->name ?? 'Mata Pelajaran') }}
+                                    </span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-2 fw-semibold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-times-circle me-1"></i> BELUM DIKUMPULKAN
+                                    </span>
                                 </div>
-                                <h5 class="fw-bold text-dark mb-1">{{ $pa->title }}</h5>
-                                <div class="text-muted small mb-2">Guru: {{ $pa->teacher?->user->name ?? 'Guru Pengampu' }}</div>
+                                
+                                <h5 class="fw-bold text-dark mb-1 fs-5">{{ $pa->title }}</h5>
+                                <div class="text-muted small mb-2"><i class="fas fa-user-tie me-1"></i>Guru Pengampu: <strong>{{ $pa->teacher?->user->name ?? '-' }}</strong></div>
+                                
                                 @if($pa->description)
-                                    <p class="text-secondary small mb-2" style="max-width: 700px;">{{ Str::limit(strip_tags($pa->description), 150) }}</p>
+                                    <p class="text-secondary small mb-1 p-2 bg-light rounded-2" style="max-width: 750px;">
+                                        {{ Str::limit(strip_tags($pa->description), 160) }}
+                                    </p>
                                 @endif
                             </div>
-                            <div class="text-end">
-                                <span class="badge bg-danger px-3 py-2 rounded-pill font-monospace" style="font-size: 0.85rem;">
-                                    <i class="far fa-clock me-1"></i> Tenggat: {{ \Carbon\Carbon::parse($pa->due_at)->format('d M Y, H:i') }} WIB
-                                </span>
-                                <div class="text-muted small mt-1 font-italic">
-                                    ({{ \Carbon\Carbon::parse($pa->due_at)->diffForHumans() }})
+
+                            <div class="text-end ms-auto">
+                                <div class="bg-danger text-white px-3 py-2 rounded-3 text-center shadow-sm">
+                                    <div class="small fw-bold" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">TENGGAT WAKTU</div>
+                                    <div class="fw-extrabold font-monospace fs-6">{{ \Carbon\Carbon::parse($pa->due_at)->format('d M Y') }}</div>
+                                    <div class="small font-monospace">{{ \Carbon\Carbon::parse($pa->due_at)->format('H:i') }} WIB</div>
+                                </div>
+                                <div class="text-danger fw-semibold small mt-1">
+                                    <i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($pa->due_at)->diffForHumans() }}
                                 </div>
                             </div>
                         </div>
                     </div>
                 @endforeach
             @else
-                <div class="pr-done-banner">
+                <div class="pr-done-banner p-4 bg-light rounded-3 text-center border">
                     <div class="display-6 mb-2">🎉</div>
-                    <h5 class="fw-bold mb-1">Semua PR & Tugas Sudah Selesai!</h5>
-                    <p class="mb-0 text-muted">Anak Anda saat ini tidak memiliki tanggungan Pekerjaan Rumah (PR) yang belum dikumpulkan.</p>
+                    <h5 class="fw-bold mb-1 text-success">Semua PR & Tugas 1 Minggu Terakhir Sudah Selesai!</h5>
+                    <p class="mb-0 text-muted small">Anak Anda tidak memiliki tanggungan Pekerjaan Rumah (PR) dari mata pelajaran manapun dalam 1 minggu terakhir.</p>
                 </div>
             @endif
         </div>
