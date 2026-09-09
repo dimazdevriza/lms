@@ -155,4 +155,36 @@ class ParentPortalSecurityTest extends TestCase
         $this->assertEquals(6, strlen($student1->parent_code));
         $this->assertEquals(6, strlen($student2->parent_code));
     }
+
+    public function test_parent_can_access_via_student_name_or_nisn(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Budi Santoso',
+            'role' => 'siswa',
+        ]);
+
+        $student = Student::create([
+            'user_id' => $user->id,
+            'nisn' => '1234567890',
+            'parent_code' => 'KODE999',
+        ]);
+
+        // 1. Access by Student Name
+        $response = $this->post(route('parent.access'), [
+            'parent_code' => 'Budi Santoso',
+        ]);
+
+        $response->assertRedirect(route('parent.dashboard'));
+        $this->assertEquals($student->id, session('parent_student_id'));
+
+        $this->flushSession();
+
+        // 2. Access by NISN
+        $response2 = $this->post(route('parent.access'), [
+            'parent_code' => '1234567890',
+        ]);
+
+        $response2->assertRedirect(route('parent.dashboard'));
+        $this->assertEquals($student->id, session('parent_student_id'));
+    }
 }

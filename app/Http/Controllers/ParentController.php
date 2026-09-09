@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\ClassAttendanceDetail;
 use App\Models\AttendanceDetail;
 use App\Models\StudentGrade;
+use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\BehaviorRecord;
 use Illuminate\Http\Request;
@@ -50,20 +51,51 @@ class ParentController extends Controller
             'parent_code' => 'required|string',
         ]);
 
-        $code = strtoupper(trim($request->parent_code));
+        $input = trim($request->parent_code);
+        $code = strtoupper($input);
 
+        // 1. Cari berdasarkan Kode Akses Ortu (Parent Code)
         $student = Student::where('parent_code', $code)->first();
+
+        // 2. Cari berdasarkan NISN
+        if (!$student) {
+            $student = Student::where('nisn', $input)->first();
+        }
+
+        // 3. Cari berdasarkan Nama Siswa (User Name)
+        if (!$student) {
+            $matchingStudents = Student::whereHas('user', function ($q) use ($input) {
+                $q->where('name', 'LIKE', '%' . $input . '%');
+            })->get();
+
+            if ($matchingStudents->count() === 1) {
+                $student = $matchingStudents->first();
+            } elseif ($matchingStudents->count() > 1) {
+                // Cek apakah ada yang persis (exact match case-insensitive)
+                $exactMatch = $matchingStudents->first(function ($s) use ($input) {
+                    return strtolower(trim($s->user?->name ?? '')) === strtolower($input);
+                });
+
+                if ($exactMatch) {
+                    $student = $exactMatch;
+                } else {
+                    return back()->withInput()->withErrors([
+                        'parent_code' => 'Ditemukan beberapa siswa dengan nama serupa. Silakan ketik Nama Lengkap Siswa secara spesifik atau masukkan NISN.'
+                    ]);
+                }
+            }
+        }
 
         if (!$student) {
             // Log failed access attempt for security monitoring
             Log::warning('Parent portal: failed access attempt', [
-                'code_hash' => $this->codeHash($code),
+                'code_hash' => $this->codeHash($input),
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'endpoint' => 'access',
             ]);
 
-            return back()->withErrors(['parent_code' => 'Kode akses orang tua tidak valid atau tidak ditemukan.']);
+            return back()->withInput()->withErrors(['parent_code' => 'Data siswa tidak ditemukan. Silakan masukkan Nama Lengkap Siswa, NISN, atau Kode Akses yang benar.']);
         }
 
         // Log successful access
@@ -154,6 +186,32 @@ class ParentController extends Controller
         $studentId = $student->id;
         $student->load(['user', 'schoolClass.academicYear']);
 
+        // Kehadiran Hari Ini (Today's Attendance)
+        $today = now()->format('Y-m-d');
+        
+        $todayDailyAttendance = ClassAttendanceDetail::where('student_id', $studentId)
+            ->whereHas('attendance', function ($q) use ($today) {
+                $q->whereDate('date', $today);
+            })
+            ->with('attendance')
+            ->first();
+
+        $todaySubjectAttendances = AttendanceDetail::where('student_id', $studentId)
+            ->whereHas('attendance', function ($q) use ($today) {
+                $q->whereDate('date', $today);
+            })
+            ->with(['attendance.subject', 'attendance.teacher.user'])
+            ->get();
+
+        // Tugas Baru (PR) yang Belum Dikerjakan oleh Siswa
+        $pendingAssignments = Assignment::where('class_id', $student->class_id)
+            ->whereDoesntHave('submissions', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+            ->with(['subject', 'teacher.user'])
+            ->orderBy('due_at', 'asc')
+            ->get();
+
         // Daily Attendance summary calculations
         $totDaily = ClassAttendanceDetail::where('student_id', $studentId)->count();
         $hadirDaily = ClassAttendanceDetail::where('student_id', $studentId)->where('status', 'hadir')->count();
@@ -209,6 +267,9 @@ class ParentController extends Controller
 
         return view('parent.dashboard', compact(
             'student',
+            'todayDailyAttendance',
+            'todaySubjectAttendances',
+            'pendingAssignments',
             'totDaily',
             'hadirDaily',
             'completedTasks',

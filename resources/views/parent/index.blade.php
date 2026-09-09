@@ -165,11 +165,9 @@
             border: 2px solid #E2E8F0;
             border-radius: var(--radius-md);
             padding: 14px 16px;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             text-align: center;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--primary);
             transition: all 0.25s var(--ease-out);
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -178,9 +176,9 @@
 
         .form-control-access::placeholder {
             color: #B0BEC5;
-            letter-spacing: 1px;
+            letter-spacing: 0;
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .form-control-access:focus {
@@ -313,7 +311,7 @@
 
         <div class="card-body-inner">
             <p class="description">
-                Masukkan <strong>Kode Akses Orang Tua</strong> yang diberikan oleh wali kelas untuk memantau perkembangan belajar putra/putri Anda.
+                Ketik <strong>Nama Lengkap Siswa</strong>, <strong>NISN</strong>, atau <strong>Kode Akses</strong> untuk memantau perkembangan belajar putra/putri Anda.
             </p>
 
             @if($errors->any())
@@ -346,13 +344,14 @@
                     <input type="text" 
                            class="form-control-access" 
                            name="parent_code" 
-                           placeholder="Masukkan 6 Digit Kode Akses (Contoh: X8R2KP)" 
+                           value="{{ old('parent_code') }}"
+                           placeholder="Ketik Nama Siswa / NISN / Kode Akses" 
                            required 
                            autocomplete="off"
-                           maxlength="15">
+                           maxlength="100">
                 </div>
                 <button type="submit" class="btn-access mb-3">
-                    <i class="fas fa-search"></i> Pantau Aktifitas Siswa
+                    <i class="fas fa-search"></i> Pantau Aktivitas Siswa
                 </button>
             </form>
 
@@ -363,8 +362,8 @@
             </div>
 
             <div class="info-box">
-                <strong><i class="fas fa-info-circle me-1"></i> Informasi:</strong><br>
-                Setiap siswa memiliki kode akses pemantauan unik yang terhubung langsung dengan databasenya (Nilai Tugas, Kehadiran Kelas, & Catatan Perilaku). Jika Anda tidak tahu kodenya, silakan hubungi Wali Kelas.
+                <strong><i class="fas fa-info-circle me-1"></i> Kemudahan Akses Orang Tua:</strong><br>
+                Anda cukup mengetik <strong>Nama Lengkap Putra/Putri Anda</strong> (atau NISN / Kode Akses 6 Digit) untuk langsung melihat laporan Kehadiran, Nilai Tugas, dan Catatan Perilaku Sekolah.
             </div>
         </div>
     </div>
