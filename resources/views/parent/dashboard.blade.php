@@ -224,33 +224,35 @@
              2. PERSENTASE KESELURUHAN (CLEAN 3-CARD PROGRESS GRID)
              ========================================== -->
         @php
-            $presentPct = $totDaily > 0 ? round(($hadirDaily / $totDaily) * 100, 1) : 100;
+            $totSubjectCount = isset($totSubject) ? $totSubject : 0;
+            $hadirSubjectCount = isset($hadirSubject) ? $hadirSubject : 0;
+            $presentPct = $totSubjectCount > 0 ? round(($hadirSubjectCount / $totSubjectCount) * 100, 1) : 100;
             $totalAss = $submissions->count() + $pendingAssignments->count();
             $taskDonePct = $totalAss > 0 ? round(($submissions->count() / $totalAss) * 100) : 100;
         @endphp
 
         <div class="row g-2 mb-3">
-            <!-- 1. PERSENTASE KEHADIRAN MAPEL & HARIAN -->
+            <!-- 1. PERSENTASE KEHADIRAN SELURUH MATA PELAJARAN -->
             <div class="col-12 col-md-4">
                 <div class="p-3 bg-white rounded-4 border shadow-sm h-100 position-relative overflow-hidden" style="border-left: 5px solid #1B5E20 !important;">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <div>
                             <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
-                                KEHADIRAN HARI SEKOLAH
+                                KEHADIRAN MATA PELAJARAN
                             </div>
                             <div class="fs-3 fw-extrabold text-success font-monospace my-1">
                                 {{ $presentPct }}%
                             </div>
                         </div>
                         <div class="bg-success-subtle text-success p-2 rounded-circle">
-                            <i class="fas fa-user-check"></i>
+                            <i class="fas fa-book-reader"></i>
                         </div>
                     </div>
                     <div class="progress rounded-pill bg-light mb-2" style="height: 7px;">
                         <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: {{ $presentPct }}%"></div>
                     </div>
                     <div class="text-muted small">
-                        <i class="fas fa-check-circle text-success me-1"></i>{{ $hadirDaily }} dari {{ $totDaily }} hari sekolah
+                        <i class="fas fa-check-circle text-success me-1"></i>{{ $hadirSubjectCount }} dari {{ $totSubjectCount }} jam mapel hadir
                     </div>
                 </div>
             </div>

@@ -217,6 +217,10 @@ class ParentController extends Controller
             ->orderBy('due_at', 'asc')
             ->get();
 
+        // Subject Attendance summary calculations (Kehadiran Mata Pelajaran)
+        $totSubject = AttendanceDetail::where('student_id', $studentId)->count();
+        $hadirSubject = AttendanceDetail::where('student_id', $studentId)->where('status', 'hadir')->count();
+
         // Daily Attendance summary calculations
         $totDaily = ClassAttendanceDetail::where('student_id', $studentId)->count();
         $hadirDaily = ClassAttendanceDetail::where('student_id', $studentId)->where('status', 'hadir')->count();
@@ -275,6 +279,8 @@ class ParentController extends Controller
             'todayDailyAttendance',
             'todaySubjectAttendances',
             'pendingAssignments',
+            'totSubject',
+            'hadirSubject',
             'totDaily',
             'hadirDaily',
             'completedTasks',
