@@ -185,18 +185,144 @@
         @endif
 
         <!-- ==========================================
-             1. EXECUTIVE RECAP CARD (1 LAYAR RINGKAS HP & DESKTOP)
+             1. FLOATING TOP SELECTOR (NAVIGASI PILIHAN PALING ATAS)
              ========================================== -->
-        <div class="card border-0 shadow-lg mb-4 overflow-hidden" style="border-radius: 20px; background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%); color: white;">
+        <div class="sticky-top pt-2 pb-2 mb-3 bg-body" style="top: 0; z-index: 1020;">
+            <div class="bg-white p-2 rounded-4 shadow-sm border" style="border-color: rgba(27,94,32,0.18) !important;">
+                <div class="d-flex align-items-center justify-content-between px-2 mb-1">
+                    <span class="text-muted small fw-bold text-uppercase font-monospace" style="font-size: 0.7rem; letter-spacing: 0.05em; color: #1B5E20 !important;">
+                        <i class="fas fa-compass me-1 text-success"></i> PILIH RINCIAN YANG INGIN DILIHAT:
+                    </span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace" style="font-size: 0.65rem;">
+                        <i class="fas fa-mobile-alt me-1"></i> Mode HP
+                    </span>
+                </div>
+                <ul class="nav nav-pills nav-fill gap-1" id="parentMainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-presensi-btn" data-bs-toggle="pill" data-bs-target="#tab-presensi" type="button" role="tab">
+                            <i class="fas fa-book-reader me-1"></i> 1. Presensi
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center position-relative" id="tab-pr-btn" data-bs-toggle="pill" data-bs-target="#tab-pr" type="button" role="tab">
+                            <i class="fas fa-tasks me-1"></i> 2. PR & Tugas
+                            @if($pendingAssignments->count() > 0)
+                                <span class="badge bg-danger rounded-circle ms-1">{{ $pendingAssignments->count() }}</span>
+                            @endif
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-nilai-btn" data-bs-toggle="pill" data-bs-target="#tab-nilai" type="button" role="tab">
+                            <i class="fas fa-graduation-cap me-1"></i> 3. Nilai Rapor
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             2. PERSENTASE KESELURUHAN (CLEAN 3-CARD PROGRESS GRID)
+             ========================================== -->
+        @php
+            $presentPct = $totDaily > 0 ? round(($hadirDaily / $totDaily) * 100, 1) : 100;
+            $totalAss = $submissions->count() + $pendingAssignments->count();
+            $taskDonePct = $totalAss > 0 ? round(($submissions->count() / $totalAss) * 100) : 100;
+        @endphp
+
+        <div class="row g-2 mb-3">
+            <!-- 1. PERSENTASE KEHADIRAN MAPEL & HARIAN -->
+            <div class="col-12 col-md-4">
+                <div class="p-3 bg-white rounded-4 border shadow-sm h-100 position-relative overflow-hidden" style="border-left: 5px solid #1B5E20 !important;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                KEHADIRAN HARI SEKOLAH
+                            </div>
+                            <div class="fs-3 fw-extrabold text-success font-monospace my-1">
+                                {{ $presentPct }}%
+                            </div>
+                        </div>
+                        <div class="bg-success-subtle text-success p-2 rounded-circle">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                    <div class="progress rounded-pill bg-light mb-2" style="height: 7px;">
+                        <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: {{ $presentPct }}%"></div>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-check-circle text-success me-1"></i>{{ $hadirDaily }} dari {{ $totDaily }} hari sekolah
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PERSENTASE PENGUMPULAN TUGAS -->
+            <div class="col-12 col-md-4">
+                <div class="p-3 bg-white rounded-4 border shadow-sm h-100 position-relative overflow-hidden" style="border-left: 5px solid {{ $pendingAssignments->count() > 0 ? '#F57C00' : '#1B5E20' }} !important;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                PENGUMPULAN TUGAS
+                            </div>
+                            <div class="fs-3 fw-extrabold {{ $pendingAssignments->count() > 0 ? 'text-warning' : 'text-success' }} font-monospace my-1">
+                                {{ $taskDonePct }}%
+                            </div>
+                        </div>
+                        <div class="bg-warning-subtle text-warning p-2 rounded-circle">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                    </div>
+                    <div class="progress rounded-pill bg-light mb-2" style="height: 7px;">
+                        <div class="progress-bar {{ $pendingAssignments->count() > 0 ? 'bg-warning' : 'bg-success' }} rounded-pill" role="progressbar" style="width: {{ $taskDonePct }}%"></div>
+                    </div>
+                    <div class="text-muted small">
+                        @if($pendingAssignments->count() > 0)
+                            <span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>Ada {{ $pendingAssignments->count() }} PR Belum Dikerjakan</span>
+                        @else
+                            <span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Semua PR 100% Dikumpulkan</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. RATA-RATA NILAI -->
+            <div class="col-12 col-md-4">
+                <div class="p-3 bg-white rounded-4 border shadow-sm h-100 position-relative overflow-hidden" style="border-left: 5px solid #F9A825 !important;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                RATA-RATA NILAI TUGAS
+                            </div>
+                            <div class="fs-3 fw-extrabold text-dark font-monospace my-1">
+                                {{ $avgScore }} <span class="fs-6 text-muted font-monospace">/ 100</span>
+                            </div>
+                        </div>
+                        <div class="bg-warning-subtle text-warning p-2 rounded-circle">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="progress rounded-pill bg-light mb-2" style="height: 7px;">
+                        <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: {{ min(100, $avgScore) }}%"></div>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-award text-warning me-1"></i>{{ $gradedTasks }} tugas telah dinilai guru
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             3. EXECUTIVE RECAP CARD (SOROTAN AKTIVITAS ANAK)
+             ========================================== -->
+        <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 20px; background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%); color: white;">
             <div class="card-body p-3 p-md-4">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-white-20">
                     <div>
                         <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold" style="font-size: 0.75rem; letter-spacing: 0.05em;">
-                            ⚡ REKAP EKSEKUTIF UTAMA
+                            ⚡ HIGHLIGHT AKTIVITAS TERBARU
                         </span>
-                        <h4 class="fw-bold text-white mb-0 mt-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
-                            Ringkasan Aktivitas {{ $student->user->name }}
-                        </h4>
+                        <h5 class="fw-bold text-white mb-0 mt-1" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            Sorotan Hari Ini & 1 Minggu Terakhir
+                        </h5>
                     </div>
                     <div class="text-white-50 small font-monospace d-none d-sm-block text-end">
                         <i class="far fa-calendar-alt me-1"></i>{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}
@@ -205,10 +331,10 @@
 
                 <div class="row g-2">
                     <!-- Point 1: Kehadiran Hari Ini -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
                         <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
                             <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
-                                <i class="fas fa-user-check me-1 text-warning"></i> 1. Presensi Hari Ini
+                                <i class="fas fa-user-check me-1 text-warning"></i> Presensi Jam Pelajaran Hari Ini
                             </div>
                             <div class="fw-bold fs-6 text-white">
                                 @if($todaySubjectAttendances->count() > 0)
@@ -217,11 +343,11 @@
                                         $totTodayCount = $todaySubjectAttendances->count();
                                     @endphp
                                     <span class="badge bg-success border border-light px-2 py-1 fs-6">
-                                        <i class="fas fa-check-circle me-1"></i> {{ $hadirTodayCount }}/{{ $totTodayCount }} Mapel Hadir
+                                        <i class="fas fa-check-circle me-1"></i> {{ $hadirTodayCount }}/{{ $totTodayCount }} Mapel Hadir Hari Ini
                                     </span>
                                 @else
                                     <span class="badge bg-light text-dark px-2 py-1 fs-6">
-                                        Belum Ada Absen Mapel
+                                        Belum Ada Input Presensi Hari Ini
                                     </span>
                                 @endif
                             </div>
@@ -229,71 +355,27 @@
                     </div>
 
                     <!-- Point 2: PR Belum Dikerjakan -->
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
                         <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
                             <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
-                                <i class="fas fa-tasks me-1 text-warning"></i> 2. Tanggungan PR (1 Minggu)
+                                <i class="fas fa-tasks me-1 text-warning"></i> Tanggungan PR Belum Dikumpulkan
                             </div>
                             <div class="fw-bold fs-6 text-white">
                                 @if($pendingAssignments->count() > 0)
                                     <span class="badge bg-danger border border-light px-2 py-1 fs-6">
-                                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $pendingAssignments->count() }} PR Belum Selesai
+                                        <i class="fas fa-exclamation-triangle me-1"></i> {{ $pendingAssignments->count() }} PR Belum Selesai (1 Minggu)
                                     </span>
                                 @else
                                     <span class="badge bg-success border border-light px-2 py-1 fs-6">
-                                        <i class="fas fa-check-circle me-1"></i> Semua PR Selesai
+                                        <i class="fas fa-check-circle me-1"></i> Tidak Ada Tanggungan PR
                                     </span>
                                 @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Point 3: Rata-Rata Nilai -->
-                    <div class="col-12 col-md-4">
-                        <div class="p-3 rounded-3 h-100" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
-                            <div class="text-white-50 small fw-bold text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
-                                <i class="fas fa-graduation-cap me-1 text-warning"></i> 3. Rata-Rata Nilai Tugas
-                            </div>
-                            <div class="fw-bold fs-5 text-white">
-                                {{ $avgScore }} <span class="fs-6 text-white-50">/ 100</span>
-                                <span class="small text-white-50 ms-1">({{ $gradedTasks }} Tugas)</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- ==========================================
-             NAVIGASI POINT RINCIAN (PANDUAN GAPTEK & NO-BLUE)
-             ========================================== -->
-        <div class="alert border-0 rounded-3 mb-3 d-flex align-items-center gap-2 p-2.5 px-3 shadow-sm" style="background-color: #E8F5E9; border-left: 5px solid #1B5E20 !important;">
-            <span class="fs-5">👉</span>
-            <div class="fw-bold small text-dark">
-                <strong>Panduan:</strong> Ketuk/Sentuh salah satu pilihan menu di bawah ini untuk melihat rincian detail:
-            </div>
-        </div>
-
-        <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-4 border" id="parentMainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-presensi-btn" data-bs-toggle="pill" data-bs-target="#tab-presensi" type="button" role="tab">
-                    <i class="fas fa-book-reader me-1 text-success"></i> 1. Presensi Mapel
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center position-relative" id="tab-pr-btn" data-bs-toggle="pill" data-bs-target="#tab-pr" type="button" role="tab">
-                    <i class="fas fa-tasks me-1 text-warning"></i> 2. Tanggungan PR
-                    @if($pendingAssignments->count() > 0)
-                        <span class="badge bg-danger rounded-circle ms-1">{{ $pendingAssignments->count() }}</span>
-                    @endif
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-nilai-btn" data-bs-toggle="pill" data-bs-target="#tab-nilai" type="button" role="tab">
-                    <i class="fas fa-graduation-cap me-1 text-success"></i> 3. Nilai & Catatan
-                </button>
-            </li>
-        </ul>
 
         <div class="tab-content" id="parentMainTabsContent">
             <!-- TAB 1: PRESENSI MAPEL HARI INI -->
