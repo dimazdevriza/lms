@@ -94,6 +94,43 @@
             background: var(--primary);
             color: #fff;
         }
+
+        /* Strict No-Blue Override for Parent Portal */
+        .nav-pills .nav-link.active,
+        .nav-pills .show > .nav-link {
+            background-color: #1B5E20 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(27, 94, 32, 0.3) !important;
+        }
+        .nav-pills .nav-link {
+            color: #212529 !important;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            margin: 2px;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: #e8f5e9 !important;
+        }
+        .text-primary, .btn-primary {
+            color: #1B5E20 !important;
+        }
+        .bg-primary {
+            background-color: #1B5E20 !important;
+        }
+        .border-primary {
+            border-color: #1B5E20 !important;
+        }
+        .btn-outline-primary {
+            color: #1B5E20 !important;
+            border-color: #1B5E20 !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: #1B5E20 !important;
+            color: #ffffff !important;
+        }
+        .badge.bg-primary {
+            background-color: #1B5E20 !important;
+        }
     </style>
 </head>
 <body>
@@ -228,13 +265,13 @@
         </div>
 
         <!-- ==========================================
-             NAVIGASI POINT RINCIAN (TAB CLEAN PADA HP)
+             NAVIGASI POINT RINCIAN (PANDUAN GAPTEK & NO-BLUE)
              ========================================== -->
-        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-            <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">
-                <i class="fas fa-list-ul text-success me-2"></i> Pilihan Rincian Aktivitas
-            </h5>
-            <span class="text-muted small">Pilih menu di bawah untuk melihat detail rincian:</span>
+        <div class="alert border-0 rounded-3 mb-3 d-flex align-items-center gap-2 p-2.5 px-3 shadow-sm" style="background-color: #E8F5E9; border-left: 5px solid #1B5E20 !important;">
+            <span class="fs-5">👉</span>
+            <div class="fw-bold small text-dark">
+                <strong>Panduan:</strong> Ketuk/Sentuh salah satu pilihan menu di bawah ini untuk melihat rincian detail:
+            </div>
         </div>
 
         <ul class="nav nav-pills nav-fill bg-white p-2 rounded-4 shadow-sm mb-4 border" id="parentMainTabs" role="tablist">
@@ -253,7 +290,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link rounded-3 py-2 fw-bold text-start text-sm-center" id="tab-nilai-btn" data-bs-toggle="pill" data-bs-target="#tab-nilai" type="button" role="tab">
-                    <i class="fas fa-graduation-cap me-1 text-primary"></i> 3. Nilai & Catatan
+                    <i class="fas fa-graduation-cap me-1 text-success"></i> 3. Nilai & Catatan
                 </button>
             </li>
         </ul>
@@ -315,7 +352,7 @@
                         </div>
                     @else
                         <div class="p-4 bg-light rounded-3 border text-center">
-                            <div class="text-muted fw-bold mb-1"><i class="fas fa-info-circle text-primary me-1"></i>Belum Ada Catatan Presensi Mata Pelajaran Hari Ini</div>
+                            <div class="text-muted fw-bold mb-1"><i class="fas fa-info-circle text-success me-1"></i>Belum Ada Catatan Presensi Mata Pelajaran Hari Ini</div>
                             <span class="text-secondary small">Guru mata pelajaran belum menginput absensi jam pelajaran untuk hari ini.</span>
                         </div>
                     @endif
