@@ -5,6 +5,7 @@
 @section('content')
     @php
         $isDeadlinePassed = $assignment->due_at && \Carbon\Carbon::parse($assignment->due_at)->isPast();
+        $isMissingPhysicalFile = $submission && !empty($submission->file_path) && !$submission->hasPhysicalFile();
         $isFromAssignments = request()->query('from') === 'assignments';
 
         if ($isFromAssignments) {
@@ -80,6 +81,31 @@
         </div>
     @endif
 
+    @if($isMissingPhysicalFile)
+        <div class="alert alert-warning border-warning shadow-sm rounded-3 p-3 mb-4 d-flex align-items-start gap-3">
+            <div class="text-warning fs-3 mt-1"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="flex-grow-1">
+                <h6 class="fw-bold mb-1 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif;">Lampiran Berkas Tugas Perlu Diunggah Ulang</h6>
+                <p class="mb-2 text-muted small">
+                    Berkas tugas yang Anda kumpulkan sebelumnya tidak ditemukan dalam penyimpanan server (akibat pemeliharaan/migrasi sistem). 
+                    @if(!$isDeadlinePassed)
+                        Silakan unggah kembali berkas tugas Anda agar guru pengampu dapat mengakses dan memeriksa berkas Anda.
+                        @if($submission->score !== null)
+                            <span class="d-block text-success fw-bold mt-1"><i class="fas fa-shield-alt me-1"></i> Nilai Anda ({{ $submission->score }}) tetap tersimpan aman dan tidak akan berubah saat mengunggah berkas pengganti.</span>
+                        @endif
+                    @else
+                        Batas waktu pengumpulan tugas ini telah berakhir. Silakan hubungi guru mata pelajaran untuk memperpanjang batas waktu pengumpulan agar Anda dapat mengunggah berkas pengganti.
+                    @endif
+                </p>
+                @if(!$isDeadlinePassed && $submission->score !== null)
+                    <button class="btn btn-warning btn-sm fw-semibold rounded-pill px-3 mt-1 text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#reuploadMissingFileCollapse">
+                        <i class="fas fa-cloud-upload-alt me-1"></i> Unggah Berkas Pengganti Sekarang
+                    </button>
+                @endif
+            </div>
+        </div>
+    @endif
+
     @if($submission)
         {{-- Already submitted: show results --}}
         <div class="content-card mb-4 reveal reveal-delay-1">
@@ -91,13 +117,20 @@
                         <h2 class="mb-0" style="color: var(--primary); font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif;">{{ $submission->score }}</h2>
                         <small class="text-muted text-uppercase fw-bold">Nilai</small>
                     </div>
+                    @if($isMissingPhysicalFile && !$isDeadlinePassed)
+                        <div class="mt-3">
+                            <button class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#reuploadMissingFileCollapse">
+                                <i class="fas fa-cloud-upload-alt me-1"></i> Unggah Berkas Pengganti (Nilai Tetap Aman)
+                            </button>
+                        </div>
+                    @endif
                 @else
                     <div class="d-flex flex-column align-items-center gap-2 mt-2">
                         <span class="status-badge status-badge--pending fs-6"><i class="fas fa-hourglass-half me-1"></i> Menunggu penilaian guru</span>
                         @if(!$isDeadlinePassed)
                             <div class="d-flex gap-2 align-items-center mt-2 flex-wrap justify-content-center">
-                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse" aria-expanded="{{ ($errors->any() || request()->has('edit')) ? 'true' : 'false' }}" aria-controls="editSubmissionCollapse">
-                                    <i class="fas fa-edit me-1"></i> Edit Jawaban
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse" aria-expanded="{{ ($errors->any() || request()->has('edit') || $isMissingPhysicalFile) ? 'true' : 'false' }}" aria-controls="editSubmissionCollapse">
+                                    <i class="fas fa-edit me-1"></i> @if($isMissingPhysicalFile) Unggah Berkas Pengganti @else Edit Jawaban @endif
                                 </button>
                                 <form action="{{ route('siswa.assignments.unsubmit', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengiriman tugas ini?')">
                                     @csrf
@@ -114,8 +147,38 @@
             </div>
         </div>
 
+        @if($submission->score !== null && $isMissingPhysicalFile && !$isDeadlinePassed)
+            <div class="collapse {{ $errors->any() ? 'show' : '' }} mb-4" id="reuploadMissingFileCollapse">
+                <div class="card border-warning shadow-sm p-4 rounded-3" style="border-top: 4px solid #ffc107 !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                            <i class="fas fa-cloud-upload-alt text-warning me-2"></i> Unggah Berkas Pengganti
+                        </h5>
+                        <span class="badge bg-success-subtle text-success border border-success px-3 py-1 rounded-pill">
+                            <i class="fas fa-shield-alt me-1"></i> Nilai Anda ({{ $submission->score }}) Tetap Aman
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Pilih berkas tugas Anda untuk disimpan ke penyimpanan server baru. Proses ini hanya memperbarui berkas lampiran dan <strong>tidak akan mengubah nilai</strong> yang telah diberikan oleh guru.
+                    </p>
+                    <form method="POST" action="{{ route('siswa.assignments.submit', $assignment) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Pilih Berkas Pengganti <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" required onchange="validateFileSize(this)">
+                            <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i> Format didukung: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), PowerPoint (.ppt/.pptx). Maksimal 25 MB.</small>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-light px-3" data-bs-toggle="collapse" data-bs-target="#reuploadMissingFileCollapse">Batal</button>
+                            <button type="submit" class="btn btn-warning px-4 fw-bold text-dark"><i class="fas fa-upload me-1"></i> Unggah Berkas Pengganti</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         @if($submission->score === null && !$isDeadlinePassed)
-            <div class="collapse {{ ($errors->any() || request()->has('edit')) ? 'show' : '' }} mb-4" id="editSubmissionCollapse">
+            <div class="collapse {{ ($errors->any() || request()->has('edit') || $isMissingPhysicalFile) ? 'show' : '' }} mb-4" id="editSubmissionCollapse">
                 <div class="card border-0 shadow-sm p-4" style="border-radius: var(--radius-md) !important; border-top: 4px solid var(--primary) !important;">
                     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                         <h5 class="fw-bold text-dark mb-0" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fas fa-edit text-primary me-2"></i> Edit Jawaban Tugas</h5>
@@ -200,9 +263,19 @@
                                 <textarea name="answer_text" class="form-control" rows="4" placeholder="Tuliskan catatan atau jawaban singkat Anda di sini...">{{ old('answer_text', $submission->answer_text) }}</textarea>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Upload File Baru (Opsional, untuk mengganti file lama)</label>
-                                <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="validateFileSize(this)">
-                                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i> Maksimal ukuran file: 10 MB. Biarkan kosong jika tidak ingin mengubah file.</small>
+                                <label class="form-label fw-bold">
+                                    @if($isMissingPhysicalFile)
+                                        <i class="fas fa-cloud-upload-alt text-warning me-1"></i> Upload Berkas Pengganti <span class="badge bg-warning text-dark ms-1">Perlu Diunggah</span>
+                                    @else
+                                        Upload File Baru (Opsional, untuk mengganti file lama)
+                                    @endif
+                                </label>
+                                <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="validateFileSize(this)" {{ $isMissingPhysicalFile ? 'required' : '' }}>
+                                @if($isMissingPhysicalFile)
+                                    <small class="text-danger mt-1 d-block"><i class="fas fa-exclamation-triangle me-1"></i> Berkas lama belum tersimpan di server baru. Harap pilih berkas tugas Anda untuk diunggah ulang.</small>
+                                @else
+                                    <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i> Maksimal ukuran file: 25 MB. Biarkan kosong jika tidak ingin mengubah file.</small>
+                                @endif
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-4">
                                 <button type="button" class="btn btn-outline-secondary px-4" data-bs-toggle="collapse" data-bs-target="#editSubmissionCollapse">Batal</button>

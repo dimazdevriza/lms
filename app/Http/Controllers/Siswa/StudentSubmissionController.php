@@ -124,8 +124,15 @@ class StudentSubmissionController extends Controller
             ->where('student_id', $student->id)
             ->first();
 
+        $isMissingPhysicalFile = $existingSubmission 
+            && !empty($existingSubmission->file_path) 
+            && !$existingSubmission->hasPhysicalFile();
+
         if ($existingSubmission && !$existingSubmission->trashed() && $existingSubmission->score !== null) {
-            return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat diubah lagi.']);
+            // Allow re-upload only if the physical file is missing from server and a new file is being uploaded
+            if (!($isMissingPhysicalFile && $request->hasFile('file'))) {
+                return back()->withErrors(['general' => 'Tugas sudah dinilai oleh guru dan tidak dapat diubah lagi.']);
+            }
         }
 
         if ($assignment->isOnline()) {
@@ -171,14 +178,22 @@ class StudentSubmissionController extends Controller
                 $submission->restore();
             }
             if ($filePath && $submission->file_path && $submission->file_path !== $filePath) {
-                Storage::disk('local')->delete($submission->file_path);
+                if (Storage::disk('local')->exists($submission->file_path)) {
+                    Storage::disk('local')->delete($submission->file_path);
+                }
             }
+
+            $isGraded = $submission->score !== null;
+
             $submission->update([
                 'answer_text' => array_key_exists('answer_text', $data) ? $data['answer_text'] : $submission->answer_text,
                 'file_path' => $filePath ?? $submission->file_path,
                 'submitted_at' => now(),
             ]);
-            $msg = 'Tugas berhasil dikirim.';
+
+            $msg = $isGraded 
+                ? 'Berkas pengganti tugas berhasil diunggah. Nilai Anda tetap dipertahankan.' 
+                : 'Tugas berhasil dikirim.';
         } else {
             AssignmentSubmission::create([
                 'assignment_id' => $assignment->id,

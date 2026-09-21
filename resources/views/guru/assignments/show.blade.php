@@ -469,15 +469,23 @@
                                                 'ppt', 'pptx' => 'btn-outline-warning',
                                                 default => 'btn-outline-danger',
                                             };
+                                            $hasFile = $submission->hasPhysicalFile();
                                         @endphp
                                         @if($isAudio)
                                             <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#gradeModal{{ $submission->id }}" style="border-radius: var(--radius-sm);">
                                                 <i class="fas fa-microphone-alt me-1"></i> Rekaman Suara
                                             </button>
                                         @else
-                                            <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm {{ $btnColor }}" style="border-radius: var(--radius-sm);">
-                                                <i class="fas {{ $fileIcon }} me-1"></i> Lihat File
-                                            </a>
+                                            <div class="d-inline-flex align-items-center gap-1 flex-wrap">
+                                                <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm {{ $hasFile ? $btnColor : 'btn-outline-secondary' }}" style="border-radius: var(--radius-sm);">
+                                                    <i class="fas {{ $fileIcon }} me-1"></i> Lihat File
+                                                </a>
+                                                @if(!$hasFile)
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill py-1 px-2" title="Berkas fisik belum diunggah ulang ke server baru" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-exclamation-circle text-warning"></i> Belum Ada di Server
+                                                    </span>
+                                                @endif
+                                            </div>
                                         @endif
                                     @else
                                         <span style="color: var(--text-muted);">-</span>

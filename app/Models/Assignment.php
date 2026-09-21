@@ -66,5 +66,38 @@ class Assignment extends Model
     {
         return $this->hasMany(Question::class)->orderBy('order');
     }
+
+    /**
+     * Check if the teacher instruction physical file actually exists in server storage.
+     */
+    public function hasPhysicalFile(): bool
+    {
+        if (empty($this->file_path) || str_contains($this->file_path, '..')) {
+            return false;
+        }
+
+        $clean = ltrim($this->file_path, '/\\');
+
+        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($clean) || \Illuminate\Support\Facades\Storage::disk('public')->exists($clean)) {
+            return true;
+        }
+
+        $candidatePaths = [
+            storage_path('app/' . $clean),
+            storage_path('app/private/' . $clean),
+            storage_path('app/public/' . $clean),
+            public_path('storage/' . $clean),
+            public_path($clean),
+            storage_path($clean),
+        ];
+
+        foreach ($candidatePaths as $path) {
+            if ($path && file_exists($path) && is_file($path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 

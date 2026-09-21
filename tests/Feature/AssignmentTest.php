@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Subject;
@@ -299,5 +300,115 @@ class AssignmentTest extends TestCase
             'student_id' => $student->id,
             'answer_text' => 'Jawaban revisi sebelum deadline.',
         ]);
+    }
+
+    public function test_student_with_graded_submission_can_reupload_if_file_missing_preserving_score(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $teacherUser = User::factory()->create(['role' => 'guru']);
+        $teacher = Teacher::create([
+            'user_id' => $teacherUser->id,
+            'nip' => '1234567890',
+            'phone' => '08123456789',
+        ]);
+
+        $class = SchoolClass::create(['name' => 'X IPA 1']);
+        $subject = Subject::create(['name' => 'Matematika']);
+
+        $assignment = Assignment::create([
+            'teacher_id' => $teacher->id,
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'title' => 'Tugas Nilai Aman',
+            'due_at' => now()->addDays(3),
+            'type' => 'pdf',
+        ]);
+
+        $studentUser = User::factory()->create(['role' => 'siswa']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'nisn' => '777666',
+            'class_id' => $class->id,
+        ]);
+
+        $submission = AssignmentSubmission::create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'file_path' => 'submissions/missing_physical_file.pdf',
+            'score' => 88,
+            'feedback' => 'Sangat rapi.',
+            'submitted_at' => now()->subDays(5),
+        ]);
+
+        $this->assertFalse($submission->hasPhysicalFile());
+
+        $fakePdf = \Illuminate\Http\UploadedFile::fake()->create('jawaban_pengganti.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($studentUser)->post(route('siswa.assignments.submit', $assignment), [
+            'file' => $fakePdf,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Berkas pengganti tugas berhasil diunggah. Nilai Anda tetap dipertahankan.');
+
+        $freshSubmission = $submission->fresh();
+        $this->assertNotEquals('submissions/missing_physical_file.pdf', $freshSubmission->file_path);
+        $this->assertEquals(88, $freshSubmission->score);
+        $this->assertEquals('Sangat rapi.', $freshSubmission->feedback);
+        $this->assertTrue($freshSubmission->hasPhysicalFile());
+    }
+
+    public function test_student_with_graded_submission_cannot_reupload_if_file_exists(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $teacherUser = User::factory()->create(['role' => 'guru']);
+        $teacher = Teacher::create([
+            'user_id' => $teacherUser->id,
+            'nip' => '1234567890',
+            'phone' => '08123456789',
+        ]);
+
+        $class = SchoolClass::create(['name' => 'X IPA 1']);
+        $subject = Subject::create(['name' => 'Matematika']);
+
+        $assignment = Assignment::create([
+            'teacher_id' => $teacher->id,
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'title' => 'Tugas Terkunci',
+            'due_at' => now()->addDays(3),
+            'type' => 'pdf',
+        ]);
+
+        $studentUser = User::factory()->create(['role' => 'siswa']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'nisn' => '555444',
+            'class_id' => $class->id,
+        ]);
+
+        $storedPath = \Illuminate\Support\Facades\Storage::disk('local')->put('submissions/existing.pdf', 'file content');
+
+        $submission = AssignmentSubmission::create([
+            'assignment_id' => $assignment->id,
+            'student_id' => $student->id,
+            'file_path' => 'submissions/existing.pdf',
+            'score' => 95,
+            'submitted_at' => now()->subDay(),
+        ]);
+
+        $this->assertTrue($submission->hasPhysicalFile());
+
+        $fakePdf = \Illuminate\Http\UploadedFile::fake()->create('reupload_attempt.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($studentUser)->post(route('siswa.assignments.submit', $assignment), [
+            'file' => $fakePdf,
+        ]);
+
+        $response->assertSessionHasErrors(['general']);
+        $this->assertEquals('submissions/existing.pdf', $submission->fresh()->file_path);
+        $this->assertEquals(95, $submission->fresh()->score);
     }
 }
