@@ -455,16 +455,28 @@
                                 <td>
                                     @if($submission->file_path)
                                         @php
-                                            $subExtension = pathinfo($submission->file_path, PATHINFO_EXTENSION);
-                                            $isAudio = in_array(strtolower($subExtension), ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma']);
+                                            $subExtension = strtolower(pathinfo($submission->file_path, PATHINFO_EXTENSION));
+                                            $isAudio = in_array($subExtension, ['mp3', 'm4a', 'wav', 'webm', 'ogg', 'aac', 'flac', '3gp', 'opus', 'wma']);
+                                            $fileIcon = match($subExtension) {
+                                                'doc', 'docx' => 'fa-file-word',
+                                                'xls', 'xlsx' => 'fa-file-excel',
+                                                'ppt', 'pptx' => 'fa-file-powerpoint',
+                                                default => 'fa-file-pdf',
+                                            };
+                                            $btnColor = match($subExtension) {
+                                                'doc', 'docx' => 'btn-outline-primary',
+                                                'xls', 'xlsx' => 'btn-outline-success',
+                                                'ppt', 'pptx' => 'btn-outline-warning',
+                                                default => 'btn-outline-danger',
+                                            };
                                         @endphp
                                         @if($isAudio)
                                             <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#gradeModal{{ $submission->id }}" style="border-radius: var(--radius-sm);">
                                                 <i class="fas fa-microphone-alt me-1"></i> Rekaman Suara
                                             </button>
                                         @else
-                                            <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm btn-outline-danger" style="border-radius: var(--radius-sm);">
-                                                <i class="fas fa-file-pdf"></i> Lihat File
+                                            <a href="{{ route('submissions.download', $submission) }}" target="_blank" class="btn btn-sm {{ $btnColor }}" style="border-radius: var(--radius-sm);">
+                                                <i class="fas {{ $fileIcon }} me-1"></i> Lihat File
                                             </a>
                                         @endif
                                     @else
