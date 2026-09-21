@@ -20,6 +20,28 @@
         </div>
     </div>
 
+    <!-- Missing Materials Alert -->
+    @if(($missingMaterialsCount ?? 0) > 0)
+        <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 reveal" 
+             style="border-radius: var(--radius-md); background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%); border-left: 5px solid #ffc107 !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" 
+                     style="background: rgba(255, 193, 7, 0.25); width: 44px; height: 44px;">
+                    <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-dark">Ada {{ $missingMaterialsCount }} Berkas Materi yang Perlu Diunggah Ulang</h6>
+                    <p class="small text-muted mb-0">
+                        Beberapa berkas PDF materi pembelajaran Anda belum tersimpan di server baru. Silakan periksa dan unggah kembali berkas materi Anda.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('guru.materials.index') }}" class="btn btn-warning btn-sm fw-bold px-3 py-2 text-dark shadow-sm" style="border-radius: var(--radius-sm);">
+                <i class="fas fa-upload me-1"></i> Periksa & Upload Berkas
+            </a>
+        </div>
+    @endif
+
     <!-- Stats Grid -->
     <div class="stats-grid reveal reveal-delay-1">
         <!-- Sesi Mengajar -->

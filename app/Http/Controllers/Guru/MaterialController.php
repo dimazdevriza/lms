@@ -94,6 +94,12 @@ class MaterialController extends Controller
             }
         }
 
+        $missingMaterialsCount = Material::where('teacher_id', $teacher->id)
+            ->whereNotNull('file_path')
+            ->get()
+            ->filter(fn ($m) => !empty($m->file_path) && !$m->hasPhysicalFile())
+            ->count();
+
         return view('guru.dashboard', compact(
             'meetingsCount',
             'materialsCount',
@@ -102,7 +108,8 @@ class MaterialController extends Controller
             'recentPendingAssignments',
             'assignedClasses',
             'todaySchedules',
-            'todayIndo'
+            'todayIndo',
+            'missingMaterialsCount'
         ));
     }
 
@@ -128,7 +135,13 @@ class MaterialController extends Controller
 
         $selectedClassId = $request->class_id;
 
-        return view('guru.materials.index', compact('materials', 'teacherClasses', 'selectedClassId'));
+        $missingCount = Material::where('teacher_id', $teacherId)
+            ->whereNotNull('file_path')
+            ->get()
+            ->filter(fn ($m) => !empty($m->file_path) && !$m->hasPhysicalFile())
+            ->count();
+
+        return view('guru.materials.index', compact('materials', 'teacherClasses', 'selectedClassId', 'missingCount'));
     }
 
     public function create(): View
@@ -254,6 +267,12 @@ class MaterialController extends Controller
                 Storage::disk('public')->delete($material->file_path);
             }
             $data['file_path'] = $request->file('file')->store('materials', 'public');
+
+            // Mark unread missing-file notification as read if exists
+            \App\Models\Notification::where('user_id', Auth::id())
+                ->where('url', route('guru.materials.edit', $material->id))
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
         }
 
         $material->update($data);

@@ -27,6 +27,22 @@
         </div>
     </div>
 
+    @if($material->file_path && !$material->hasPhysicalFile())
+        <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center gap-3 p-3 reveal" 
+             style="border-radius: var(--radius-md); background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%); border-left: 5px solid #ffc107 !important;">
+            <div class="rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" 
+                 style="background: rgba(255, 193, 7, 0.25); width: 44px; height: 44px;">
+                <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">Berkas Fisik Materi Belum Tersimpan di Server Baru</h6>
+                <p class="small text-muted mb-0">
+                    File PDF untuk materi ini belum ada di server baru setelah migrasi. Silakan pilih berkas PDF di bagian <strong>File PDF Materi</strong> di bawah, kemudian klik <strong>Simpan Perubahan</strong> agar siswa dapat mengaksesnya kembali.
+                </p>
+            </div>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8 mb-4 reveal reveal-delay-1">
             <div class="content-card">
@@ -142,34 +158,46 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold" style="color: var(--primary);">📤 File PDF Materi</label>
                             @if($material->file_path)
-                                <div class="mb-3">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="small text-muted"><i class="fas fa-file-pdf text-danger me-1"></i> Preview PDF saat ini:</span>
-                                        <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="small text-decoration-none d-none d-md-inline" style="color: var(--secondary); font-weight: 600;">
-                                            <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
-                                        </a>
-                                    </div>
-                                    
-                                    <!-- Mobile Fallback Card (Mobile browsers block inline PDF iframes) -->
-                                    <div class="d-block d-md-none mb-3">
-                                        <div class="card p-4 border text-center shadow-sm" style="border-radius: var(--radius-md) !important; background: rgba(27, 94, 32, 0.015); border-color: rgba(27, 94, 32, 0.08) !important;">
-                                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
-                                            <h6 class="fw-bold text-dark mb-1">Materi PDF</h6>
-                                            <p class="text-muted small mb-4">Browser mobile tidak dapat menampilkan PDF secara langsung di halaman.</p>
-                                            <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="btn btn-sm btn-outline-primary-theme w-100 py-2.5 fw-bold" style="background: var(--primary) !important; color: white !important; border: none; border-radius: var(--radius-sm);">
-                                                <i class="fas fa-external-link-alt me-1"></i> Buka Dokumen PDF
-                                            </a>
+                                @if(!$material->hasPhysicalFile())
+                                    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-start gap-3 mb-3 p-3" style="border-radius: var(--radius-sm); background: #fff8e1; border-left: 4px solid #ffc107 !important;">
+                                        <div class="text-warning fs-4"><i class="fas fa-exclamation-triangle"></i></div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-1">Berkas Fisik Belum Tersimpan di Server Baru</h6>
+                                            <p class="small text-muted mb-0">
+                                                Materi ini tercatat memiliki lampiran file di database, namun file fisik PDF belum tersedia di server saat ini. Silakan pilih dan unggah berkas PDF materi Anda di bawah ini, lalu klik tombol <strong>Simpan Perubahan</strong>.
+                                            </p>
                                         </div>
                                     </div>
+                                @else
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="small text-muted"><i class="fas fa-file-pdf text-danger me-1"></i> Preview PDF saat ini:</span>
+                                            <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="small text-decoration-none d-none d-md-inline" style="color: var(--secondary); font-weight: 600;">
+                                                <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- Mobile Fallback Card (Mobile browsers block inline PDF iframes) -->
+                                        <div class="d-block d-md-none mb-3">
+                                            <div class="card p-4 border text-center shadow-sm" style="border-radius: var(--radius-md) !important; background: rgba(27, 94, 32, 0.015); border-color: rgba(27, 94, 32, 0.08) !important;">
+                                                <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                                                <h6 class="fw-bold text-dark mb-1">Materi PDF</h6>
+                                                <p class="text-muted small mb-4">Browser mobile tidak dapat menampilkan PDF secara langsung di halaman.</p>
+                                                <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="btn btn-sm btn-outline-primary-theme w-100 py-2.5 fw-bold" style="background: var(--primary) !important; color: white !important; border: none; border-radius: var(--radius-sm);">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Buka Dokumen PDF
+                                                </a>
+                                            </div>
+                                        </div>
 
-                                    <!-- Desktop PDF Iframe -->
-                                    <div class="d-none d-md-block border rounded shadow-sm overflow-hidden" style="height: 500px; background-color: #f8f9fa;">
-                                        <iframe src="{{ route('materials.view-file', $material) }}" width="100%" height="100%" style="border: none;"></iframe>
+                                        <!-- Desktop PDF Iframe -->
+                                        <div class="d-none d-md-block border rounded shadow-sm overflow-hidden" style="height: 500px; background-color: #f8f9fa;">
+                                            <iframe src="{{ route('materials.view-file', $material) }}" width="100%" height="100%" style="border: none;"></iframe>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
                             @endif
                             <input type="file" class="form-control" name="file" accept=".pdf" onchange="validateFileSize(this)" style="border-radius: var(--radius-sm);">
-                            <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle text-primary me-1"></i> Pilih file PDF baru jika ingin mengganti file lama. <strong class="text-dark">Maksimal 10 MB</strong>.</small>
+                            <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle text-primary me-1"></i> {{ ($material->file_path && !$material->hasPhysicalFile()) ? 'Silakan pilih berkas PDF untuk melengkapi materi ini.' : 'Pilih file PDF baru jika ingin mengganti file lama.' }} <strong class="text-dark">Maksimal 10 MB</strong>.</small>
                             @error('file')
                                 <small class="text-danger d-block">{{ $message }}</small>
                             @enderror

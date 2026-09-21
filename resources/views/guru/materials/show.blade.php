@@ -70,27 +70,44 @@
                 <div class="mt-4 pt-4 border-top">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h5 class="fw-bold mb-0" style="color: var(--primary); font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fas fa-file-pdf text-danger me-2"></i> Lampiran Dokumen</h5>
-                        <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="small text-decoration-none d-none d-md-inline" style="color: var(--secondary); font-weight: 600;">
-                            <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
-                        </a>
+                        @if($material->hasPhysicalFile())
+                            <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="small text-decoration-none d-none d-md-inline" style="color: var(--secondary); font-weight: 600;">
+                                <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                            </a>
+                        @endif
                     </div>
                     
-                    <!-- Mobile Fallback Card (Mobile browsers block inline PDF iframes) -->
-                    <div class="d-block d-md-none mb-3">
-                        <div class="card p-4 border text-center shadow-sm" style="border-radius: var(--radius-md) !important; background: rgba(27, 94, 32, 0.015); border-color: rgba(27, 94, 32, 0.08) !important;">
-                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
-                            <h6 class="fw-bold text-dark mb-1">Materi PDF</h6>
-                            <p class="text-muted small mb-4">Browser mobile tidak dapat menampilkan PDF secara langsung di halaman.</p>
-                            <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="btn btn-sm btn-outline-primary-theme w-100 py-2.5 fw-bold" style="background: var(--primary) !important; color: white !important; border: none; border-radius: var(--radius-sm);">
-                                <i class="fas fa-external-link-alt me-1"></i> Buka Dokumen PDF
-                            </a>
+                    @if(!$material->hasPhysicalFile())
+                        <div class="alert alert-warning border-0 shadow-sm p-4 d-flex align-items-start gap-3" style="border-radius: var(--radius-md); background: #fff8e1; border-left: 5px solid #ffc107 !important;">
+                            <div class="text-warning fs-3 flex-shrink-0"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">Berkas PDF Belum Tersimpan di Server Baru</h6>
+                                <p class="small text-muted mb-3">
+                                    Data materi ini tercatat memiliki file lampiran, namun file fisik PDF belum tersedia di penyimpanan server baru. Siswa tidak dapat mengunduh materi ini sebelum Anda mengunggah ulang berkasnya.
+                                </p>
+                                <a href="{{ route('guru.materials.edit', $material) }}" class="btn btn-warning btn-sm fw-bold px-3 py-2 text-dark" style="border-radius: var(--radius-sm);">
+                                    <i class="fas fa-upload me-1"></i> Upload Berkas Sekarang
+                                </a>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <!-- Mobile Fallback Card (Mobile browsers block inline PDF iframes) -->
+                        <div class="d-block d-md-none mb-3">
+                            <div class="card p-4 border text-center shadow-sm" style="border-radius: var(--radius-md) !important; background: rgba(27, 94, 32, 0.015); border-color: rgba(27, 94, 32, 0.08) !important;">
+                                <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                                <h6 class="fw-bold text-dark mb-1">Materi PDF</h6>
+                                <p class="text-muted small mb-4">Browser mobile tidak dapat menampilkan PDF secara langsung di halaman.</p>
+                                <a href="{{ route('materials.view-file', $material) }}" target="_blank" class="btn btn-sm btn-outline-primary-theme w-100 py-2.5 fw-bold" style="background: var(--primary) !important; color: white !important; border: none; border-radius: var(--radius-sm);">
+                                    <i class="fas fa-external-link-alt me-1"></i> Buka Dokumen PDF
+                                </a>
+                            </div>
+                        </div>
 
-                    <!-- Desktop PDF Iframe -->
-                    <div class="d-none d-md-block border rounded-3 shadow-sm overflow-hidden" style="height: 600px; background-color: #f8f9fa; border-color: rgba(27, 94, 32, 0.08) !important;">
-                        <iframe src="{{ route('materials.view-file', $material) }}" width="100%" height="100%" style="border: none;"></iframe>
-                    </div>
+                        <!-- Desktop PDF Iframe -->
+                        <div class="d-none d-md-block border rounded-3 shadow-sm overflow-hidden" style="height: 600px; background-color: #f8f9fa; border-color: rgba(27, 94, 32, 0.08) !important;">
+                            <iframe src="{{ route('materials.view-file', $material) }}" width="100%" height="100%" style="border: none;"></iframe>
+                        </div>
+                    @endif
                 </div>
             @endif
             

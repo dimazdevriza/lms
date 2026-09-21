@@ -4,7 +4,7 @@
 
 @section('content')
     <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3 reveal">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3 reveal">
         <div>
             <h1 class="mb-2 text-dark" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.75rem;">📚 Kelola Materi Pembelajaran</h1>
             <p class="text-muted mb-0">Upload dan kelola materi untuk siswa Anda</p>
@@ -13,6 +13,25 @@
             <i class="fas fa-plus me-2"></i> Upload Materi Baru
         </a>
     </div>
+
+    <!-- Missing Materials Alert -->
+    @if(($missingCount ?? 0) > 0)
+        <div class="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 reveal" 
+             style="border-radius: var(--radius-md); background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%); border-left: 5px solid #ffc107 !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" 
+                     style="background: rgba(255, 193, 7, 0.25); width: 44px; height: 44px;">
+                    <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-dark">Perhatian: Ada {{ $missingCount }} Berkas Materi yang Perlu Diunggah Ulang</h6>
+                    <p class="small text-muted mb-0">
+                        Berkas PDF materi bertanda <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Berkas Hilang di Server</span> belum tersimpan di server. Klik tombol <strong>Upload Ulang</strong> pada kartu materi untuk melengkapi berkasnya.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Filter Kelas -->
     @if(isset($teacherClasses) && $teacherClasses->count() > 0)
@@ -51,19 +70,29 @@
     @else
         <div class="row">
             @forelse($materials as $m)
+                @php
+                    $isMissingFile = $m->file_path && !$m->hasPhysicalFile();
+                @endphp
                 <div class="col-xl-4 col-md-6 mb-4">
                     <div class="content-card h-100 d-flex flex-column justify-content-between shadow-sm border-0 material-card overflow-hidden" 
-                         style="cursor: pointer; border-left: 4px solid var(--primary) !important; border-radius: var(--radius-md); transition: transform 0.2s ease, box-shadow 0.2s ease;"
+                         style="cursor: pointer; border-left: 4px solid {{ $isMissingFile ? '#dc3545' : 'var(--primary)' }} !important; border-radius: var(--radius-md); transition: transform 0.2s ease, box-shadow 0.2s ease; {{ $isMissingFile ? 'background: #fffdfd;' : '' }}"
                          onclick="window.location='{{ route('guru.materials.show', $m) }}'">
                         
                         <div class="content-card-body p-3 flex-grow-1">
                             <!-- Top Title & Badge -->
                             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                 <div class="flex-grow-1 overflow-hidden">
-                                    <h6 class="fw-bold mb-1 text-truncate" style="color: var(--primary); font-family: 'Plus Jakarta Sans', sans-serif;" title="{{ $m->title }}">
+                                    <h6 class="fw-bold mb-1 text-truncate" style="color: {{ $isMissingFile ? '#dc3545' : 'var(--primary)' }}; font-family: 'Plus Jakarta Sans', sans-serif;" title="{{ $m->title }}">
                                         {{ $m->title }}
                                     </h6>
-                                    <span class="status-badge status-badge--hadir py-0 px-2" style="font-size: 0.7rem;">📖 Materi</span>
+                                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                                        <span class="status-badge status-badge--hadir py-0 px-2" style="font-size: 0.7rem;">📖 Materi</span>
+                                        @if($isMissingFile)
+                                            <span class="badge bg-danger text-white py-0 px-1.5" style="font-size: 0.68rem;">
+                                                <i class="fas fa-exclamation-circle me-1"></i>Perlu Upload
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <span class="badge bg-light text-muted fw-normal flex-shrink-0" style="font-size: 0.7rem;">
                                     <i class="fas fa-calendar me-1"></i>{{ $m->created_at->format('d M Y') }}
@@ -89,11 +118,22 @@
 
                             <!-- Attachment Indicator -->
                             @if($m->file_path)
-                                <div class="d-flex align-items-center justify-content-between small" style="font-size: 0.8rem;">
-                                    <span class="status-badge py-0 px-2" style="background: rgba(220,53,69,0.08); color: #dc3545; font-size: 0.75rem;" onclick="event.stopPropagation(); window.open('{{ asset('storage/' . $m->file_path) }}', '_blank')">
-                                        <i class="fas fa-file-pdf me-1"></i>PDF Terlampir
-                                    </span>
-                                </div>
+                                @if($isMissingFile)
+                                    <div class="d-flex align-items-center justify-content-between small mt-2 p-2 rounded bg-danger-subtle border border-danger-subtle" style="font-size: 0.78rem;">
+                                        <span class="text-danger fw-semibold">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Berkas Hilang di Server
+                                        </span>
+                                        <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-danger py-0 px-2 fw-semibold" style="font-size: 0.72rem; border-radius: var(--radius-sm);" onclick="event.stopPropagation();">
+                                            <i class="fas fa-upload me-1"></i>Upload Ulang
+                                        </a>
+                                    </div>
+                                @else
+                                    <div class="d-flex align-items-center justify-content-between small" style="font-size: 0.8rem;">
+                                        <span class="status-badge py-0 px-2" style="background: rgba(220,53,69,0.08); color: #dc3545; font-size: 0.75rem;" onclick="event.stopPropagation(); window.open('{{ route('materials.view-file', $m) }}', '_blank')">
+                                            <i class="fas fa-file-pdf me-1"></i>PDF Terlampir
+                                        </span>
+                                    </div>
+                                @endif
                             @endif
                         </div>
 
@@ -102,9 +142,15 @@
                             <a href="{{ route('guru.materials.show', $m) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Lihat Detail">
                                 <i class="fas fa-eye me-1"></i> Detail
                             </a>
-                            <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-outline-primary py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Edit">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </a>
+                            @if($isMissingFile)
+                                <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-danger py-1 px-2.5 fw-semibold shadow-sm" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Upload Berkas">
+                                    <i class="fas fa-upload me-1"></i> Upload Berkas
+                                </a>
+                            @else
+                                <a href="{{ route('guru.materials.edit', $m) }}" class="btn btn-sm btn-outline-primary py-1 px-2" style="border-radius: var(--radius-sm); font-size: 0.8rem;" title="Edit">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                            @endif
                             <form action="{{ route('guru.materials.destroy', $m) }}" method="POST" onsubmit="return confirm('Hapus materi ini?')" class="d-inline">
                                 @csrf
                                 @method('DELETE')
