@@ -54,5 +54,52 @@ class Material extends Model
     {
         return $this->belongsTo(Subject::class);
     }
+
+    /**
+     * Check if the physical material file actually exists in server storage.
+     */
+    public function hasPhysicalFile(): bool
+    {
+        if (empty($this->file_path) || str_contains($this->file_path, '..')) {
+            return false;
+        }
+
+        $clean = ltrim($this->file_path, '/\\');
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($clean) || \Illuminate\Support\Facades\Storage::disk('local')->exists($clean)) {
+            return true;
+        }
+
+        $candidatePaths = [
+            storage_path('app/public/' . $clean),
+            storage_path('app/' . $clean),
+            storage_path('app/private/' . $clean),
+            public_path('storage/' . $clean),
+            public_path($clean),
+            storage_path($clean),
+        ];
+
+        if (str_starts_with($clean, 'public/')) {
+            $stripped = substr($clean, 7);
+            $candidatePaths[] = storage_path('app/public/' . $stripped);
+            $candidatePaths[] = storage_path('app/' . $stripped);
+            $candidatePaths[] = public_path('storage/' . $stripped);
+        }
+
+        if (str_starts_with($clean, 'storage/')) {
+            $stripped = substr($clean, 8);
+            $candidatePaths[] = storage_path('app/public/' . $stripped);
+            $candidatePaths[] = storage_path('app/' . $stripped);
+            $candidatePaths[] = public_path('storage/' . $stripped);
+        }
+
+        foreach ($candidatePaths as $path) {
+            if ($path && file_exists($path) && is_file($path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 

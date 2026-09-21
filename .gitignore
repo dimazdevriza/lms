@@ -59,3 +59,4 @@ backup_presentasi/
 .claude/
 tools/
 skills-lock.json
+*.xlsx
